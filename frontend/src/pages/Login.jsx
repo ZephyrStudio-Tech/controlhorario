@@ -47,25 +47,48 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-dark via-primary to-primary-light flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: 'linear-gradient(135deg, #1e3a6e 0%, var(--primary) 55%, var(--primary-light) 100%)' }}>
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-2xl mb-4">
-            <Clock className="w-7 h-7 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5"
+            style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+            <Clock className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Control Horario</h1>
-          <p className="text-white/70 text-sm mt-1">Accede a tu cuenta</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Control Horario</h1>
+          <p className="text-white/60 text-sm mt-2">Accede a tu cuenta</p>
         </div>
 
-        <div className="card p-6">
+        <div style={{
+          background: 'var(--surface-card)',
+          borderRadius: '1.25rem',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12)',
+          padding: '2rem',
+        }}>
           {/* Mode toggle */}
-          <div className="flex gap-1 bg-surface rounded-xl p-1 mb-6">
+          <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--surface)', borderRadius: '12px', padding: '0.25rem', marginBottom: '1.75rem' }}>
             <button
               type="button"
               onClick={() => setMode('email')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all
-                ${mode === 'email' ? 'bg-surface-card shadow-sm text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.375rem',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '9px',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                background: mode === 'email' ? 'var(--surface-card)' : 'transparent',
+                color: mode === 'email' ? 'var(--text-primary)' : 'var(--text-muted)',
+                boxShadow: mode === 'email' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+              }}
             >
               <Mail className="w-4 h-4" />
               Email
@@ -73,8 +96,23 @@ export default function Login() {
             <button
               type="button"
               onClick={() => setMode('dni')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all
-                ${mode === 'dni' ? 'bg-surface-card shadow-sm text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.375rem',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '9px',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                background: mode === 'dni' ? 'var(--surface-card)' : 'transparent',
+                color: mode === 'dni' ? 'var(--text-primary)' : 'var(--text-muted)',
+                boxShadow: mode === 'dni' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+              }}
             >
               <Hash className="w-4 h-4" />
               DNI rápido
@@ -82,7 +120,7 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 text-sm text-red-700">
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-5 text-sm text-red-700">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {error}
             </div>
@@ -149,6 +187,7 @@ export default function Login() {
               type="submit"
               className="btn-primary w-full btn-lg mt-2"
               disabled={loading}
+              style={{ marginTop: '1.25rem', borderRadius: '10px', fontSize: '0.9375rem' }}
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

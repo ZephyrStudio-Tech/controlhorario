@@ -58,12 +58,12 @@ export default function Navbar() {
       zIndex: 40,
     }}>
       {/* Logo */}
-      <div style={{ padding: '2rem 2rem 1.5rem', fontSize: '1.2rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
+      <div style={{ padding: '1.75rem 1.5rem 1.25rem', fontSize: '1.05rem', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '0.5rem' }}>
         Control Horario
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '0.25rem 0' }}>
         <ul style={{ listStyle: 'none' }}>
           {links.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to
@@ -76,20 +76,28 @@ export default function Navbar() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
-                    padding: '0.75rem 0.5rem 0.75rem 2rem',
-                    fontSize: '0.9rem',
+                    padding: '0.625rem 0.75rem 0.625rem 1.5rem',
+                    fontSize: '0.875rem',
                     fontWeight: active ? 500 : 400,
                     color: active ? '#ffffff' : 'var(--sidebar-muted)',
                     textDecoration: 'none',
                     position: 'relative',
-                    backgroundColor: active ? 'var(--sidebar-active)' : 'transparent',
+                    backgroundColor: active ? 'rgba(70,118,205,0.18)' : 'transparent',
+                    borderRadius: '0 10px 10px 0',
+                    margin: '0.1rem 0.75rem 0.1rem 0',
                     transition: 'color 0.15s, background-color 0.15s',
                   }}
                   onMouseEnter={e => {
-                    if (!active) e.currentTarget.style.color = '#ffffff'
+                    if (!active) {
+                      e.currentTarget.style.color = '#ffffff'
+                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'
+                    }
                   }}
                   onMouseLeave={e => {
-                    if (!active) e.currentTarget.style.color = 'var(--sidebar-muted)'
+                    if (!active) {
+                      e.currentTarget.style.color = 'var(--sidebar-muted)'
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                    }
                   }}
                 >
                   {/* Barra lateral activa */}
@@ -97,12 +105,12 @@ export default function Navbar() {
                     <span style={{
                       position: 'absolute',
                       left: 0,
-                      top: 0,
-                      height: '100%',
-                      width: '4px',
+                      top: '20%',
+                      height: '60%',
+                      width: '3px',
                       backgroundColor: 'var(--sidebar-accent)',
-                      borderTopRightRadius: '4px',
-                      borderBottomRightRadius: '4px',
+                      borderTopRightRadius: '3px',
+                      borderBottomRightRadius: '3px',
                     }} />
                   )}
                   <Icon size={15} style={{ flexShrink: 0 }} />

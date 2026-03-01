@@ -85,12 +85,12 @@ export default function WorkerDashboard() {
         : 'bg-slate-100 text-slate-600'
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">
+        <h1 className="text-2xl font-bold text-text-primary tracking-tight">
           Hola, {user?.nombre}
         </h1>
-        <p className="text-text-secondary text-sm mt-0.5">
+        <p className="text-text-secondary text-sm mt-1.5">
           {format(new Date(), "EEEE d 'de' MMMM yyyy", { locale: es })}
         </p>
       </div>
@@ -107,7 +107,7 @@ export default function WorkerDashboard() {
           )}
         </div>
 
-        <div className="flex flex-col items-center py-4">
+        <div className="flex flex-col items-center py-6">
           {session?.estado === 'abierta' && (
             <ElapsedTimer since={session.fecha_entrada} />
           )}
@@ -119,8 +119,8 @@ export default function WorkerDashboard() {
           )}
           {!session && (
             <div className="text-text-muted text-center py-4">
-              <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Ficha tu entrada para empezar</p>
+              <Clock className="w-14 h-14 mx-auto mb-4 opacity-20" />
+              <p className="text-base">Ficha tu entrada para empezar</p>
             </div>
           )}
         </div>
@@ -132,7 +132,7 @@ export default function WorkerDashboard() {
           </div>
         )}
 
-        <div className="flex flex-col gap-3 mt-4">
+        <div className="flex flex-col gap-3 mt-2">
           {!session && (
             <button
               className="btn-success btn-lg w-full text-lg"
@@ -201,13 +201,13 @@ export default function WorkerDashboard() {
       {weekStats && (
         <div className="grid grid-cols-2 gap-4">
           <div className="card p-5">
-            <p className="text-xs text-text-muted uppercase tracking-wide mb-1">Esta semana</p>
-            <p className="text-2xl font-bold text-text-primary">{weekStats.dias}</p>
+            <p className="text-xs text-text-muted uppercase tracking-wide mb-2 font-semibold">Esta semana</p>
+            <p className="text-3xl font-bold text-text-primary leading-none mb-1">{weekStats.dias}</p>
             <p className="text-sm text-text-secondary">días fichados</p>
           </div>
           <div className="card p-5">
-            <p className="text-xs text-text-muted uppercase tracking-wide mb-1">Horas netas</p>
-            <p className="text-2xl font-bold text-text-primary">{weekStats.horas}h</p>
+            <p className="text-xs text-text-muted uppercase tracking-wide mb-2 font-semibold">Horas netas</p>
+            <p className="text-3xl font-bold text-text-primary leading-none mb-1">{weekStats.horas}h</p>
             <p className="text-sm text-text-secondary">esta semana</p>
           </div>
         </div>
