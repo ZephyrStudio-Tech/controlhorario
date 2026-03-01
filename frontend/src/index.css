@@ -288,6 +288,25 @@ textarea.input {
 
 /* ─── Tailwind layer base override ─────────────────────────── */
 
+@theme {
+  --color-primary:        #2563eb;
+  --color-primary-light:  #3b82f6;
+  --color-primary-dark:   #1d4ed8;
+
+  --color-bg:             #f4f6f9;
+  --color-surface:        #eef0f4;
+  --color-surface-card:   #ffffff;
+  --color-surface-border: #dde1e9;
+
+  --color-text-primary:   #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted:     #94a3b8;
+
+  --color-success:        #16a34a;
+  --color-warning:        #d97706;
+  --color-danger:         #dc2626;
+}
+
 @layer base {
   * {
     border-color: var(--surface-border);
