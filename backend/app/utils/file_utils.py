@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
 
+ALLOWED_MIMES = {"application/pdf", "image/jpeg"}
+MAX_SIZE_BYTES = 30 * 1024 * 1024  # 30 MB
+
 
 def ensure_storage_dir(base_path: str, user_id: str) -> str:
     """Create and return the user-specific storage directory."""
@@ -10,5 +13,9 @@ def ensure_storage_dir(base_path: str, user_id: str) -> str:
 
 
 def is_allowed_mime(mime_type: str) -> bool:
-    allowed = {"application/pdf", "image/jpeg", "image/jpg"}
-    return mime_type in allowed
+    return mime_type in ALLOWED_MIMES
+
+
+def sanitize_filename(filename: str) -> str:
+    """Replace unsafe characters in filename with underscores."""
+    return "".join(c if c.isalnum() or c in "._-" else "_" for c in filename)

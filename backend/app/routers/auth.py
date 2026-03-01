@@ -33,9 +33,8 @@ def login_email(payload: LoginEmail, db: Session = Depends(get_db)):
 
 @router.post("/login/dni", response_model=TokenResponse)
 def login_dni(payload: LoginDNI, db: Session = Depends(get_db)):
-    from app.services.auth_service import verify_password as vp
     user = db.query(User).filter(User.dni == payload.dni.upper(), User.activo == True).first()
-    if not user or not user.pin_hash or not vp(payload.dni.upper(), user.pin_hash):
+    if not user or not user.pin_hash or not verify_password(payload.dni.upper(), user.pin_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": True, "code": "INVALID_CREDENTIALS", "message": "DNI/PIN incorrecto"},

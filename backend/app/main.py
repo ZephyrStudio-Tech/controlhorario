@@ -5,7 +5,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
-from app.database import engine
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from app.database import engine, SessionLocal
 from app.models import user, work_session, session_pause, absence, document  # noqa: F401
 from app.routers import auth, users, sessions, absences, documents
 from app.services.report_service import router as reports_router
@@ -13,6 +14,7 @@ from app.config import get_settings
 
 settings = get_settings()
 logger = logging.getLogger("uvicorn.error")
+scheduler = AsyncIOScheduler()
 
 
 def create_initial_admin():
@@ -38,11 +40,27 @@ def create_initial_admin():
             logger.info(f"Admin user created: {settings.admin_email}")
 
 
+def job_mark_incomplete_sessions():
+    """Scheduled job: mark stale open sessions as INCOMPLETA every hour."""
+    from app.services.session_service import mark_incomplete_sessions
+    db = SessionLocal()
+    try:
+        mark_incomplete_sessions(db)
+    except Exception as e:
+        logger.error(f"Error en job mark_incomplete_sessions: {e}")
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # La migración ahora se hace en el entrypoint.sh
     create_initial_admin()
+    scheduler.add_job(job_mark_incomplete_sessions, "interval", hours=1, id="mark_incomplete")
+    scheduler.start()
+    logger.info("Scheduler iniciado")
     yield
+    scheduler.shutdown()
+    logger.info("Scheduler detenido")
 
 
 app = FastAPI(
@@ -56,7 +74,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -81,7 +99,6 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 
-# Include all routers under /api prefix
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(sessions.router, prefix="/api")

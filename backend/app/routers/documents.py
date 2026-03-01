@@ -11,12 +11,10 @@ from app.models.document import Document
 from app.schemas.document import DocumentOut
 from app.services.auth_service import get_current_user, require_admin_or_rrhh
 from app.config import get_settings
+from app.utils.file_utils import ensure_storage_dir, is_allowed_mime, sanitize_filename, MAX_SIZE_BYTES
 
 settings = get_settings()
 router = APIRouter(prefix="/documents", tags=["documents"])
-
-ALLOWED_MIMES = {"application/pdf", "image/jpeg", "image/jpg"}
-MAX_SIZE_BYTES = 30 * 1024 * 1024  # 30 MB
 
 
 @router.post("/upload", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
@@ -25,7 +23,7 @@ async def upload_document(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if file.content_type not in ALLOWED_MIMES:
+    if not is_allowed_mime(file.content_type):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": True, "code": "INVALID_FILE_TYPE", "message": "Solo se permiten ficheros PDF, JPG y JPEG"},
@@ -37,11 +35,9 @@ async def upload_document(
             detail={"error": True, "code": "FILE_TOO_LARGE", "message": "El fichero supera el tamaño máximo de 30MB"},
         )
 
-    # Build storage path
-    user_dir = os.path.join(settings.storage_path, str(current_user.id))
-    os.makedirs(user_dir, exist_ok=True)
+    user_dir = ensure_storage_dir(settings.storage_path, str(current_user.id))
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    safe_name = "".join(c if c.isalnum() or c in "._-" else "_" for c in file.filename)
+    safe_name = sanitize_filename(file.filename)
     filename = f"{timestamp}_{safe_name}"
     file_path = os.path.join(user_dir, filename)
 
@@ -100,7 +96,6 @@ def download_document(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": True, "code": "DOCUMENT_NOT_FOUND", "message": "Documento no encontrado"},
         )
-    # Workers can only download their own documents
     if current_user.rol == RolEnum.worker and doc.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

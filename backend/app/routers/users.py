@@ -17,7 +17,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/", response_model=List[UserOut])
 def list_users(
-    rol: Optional[str] = Query(None),
+    rol: Optional[RolEnum] = Query(None),
     activo: Optional[bool] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
@@ -53,7 +53,7 @@ def create_user(
         dni=payload.dni.upper(),
         rol=payload.rol,
         jornada_horas_diarias=payload.jornada_horas_diarias,
-        pin_hash=hash_password(payload.dni.upper()),  # DNI as default PIN
+        pin_hash=hash_password(payload.dni.upper()),
     )
     if payload.password:
         user.password_hash = hash_password(payload.password)
@@ -95,7 +95,7 @@ def update_user(
 
     if "password" in update_data:
         user.password_hash = hash_password(update_data.pop("password"))
-        # Regenerate PIN from new DNI if DNI is also changing
+
     if "dni" in update_data:
         new_dni = update_data["dni"].upper()
         existing = db.query(User).filter(User.dni == new_dni, User.id != user_id).first()
@@ -106,6 +106,16 @@ def update_user(
             )
         update_data["dni"] = new_dni
         user.pin_hash = hash_password(new_dni)
+
+    if "email" in update_data and update_data["email"]:
+        existing_email = db.query(User).filter(
+            User.email == update_data["email"], User.id != user_id
+        ).first()
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": True, "code": "EMAIL_EXISTS", "message": "El email ya existe"},
+            )
 
     for key, value in update_data.items():
         setattr(user, key, value)
@@ -132,5 +142,17 @@ def deactivate_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": True, "code": "SELF_DEACTIVATE", "message": "No puedes desactivarte a ti mismo"},
         )
+    # Evitar que se desactive el último admin activo
+    if user.rol == RolEnum.admin:
+        active_admins = db.query(User).filter(
+            User.rol == RolEnum.admin,
+            User.activo == True,
+            User.id != user_id,
+        ).count()
+        if active_admins == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": True, "code": "LAST_ADMIN", "message": "No puedes desactivar el último administrador activo"},
+            )
     user.activo = False
     db.commit()

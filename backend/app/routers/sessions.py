@@ -14,7 +14,6 @@ from app.services.auth_service import get_current_user, require_admin, require_a
 from app.services.session_service import (
     get_client_ip,
     compute_session_hours,
-    mark_incomplete_sessions,
 )
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -27,7 +26,7 @@ def clock_in(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    mark_incomplete_sessions(db)
+    # mark_incomplete_sessions eliminado de aquí — ahora lo gestiona el scheduler en main.py
     active = db.query(WorkSession).filter(
         WorkSession.user_id == current_user.id,
         WorkSession.estado.in_([SessionEstadoEnum.abierta, SessionEstadoEnum.en_pausa]),
@@ -219,13 +218,17 @@ def admin_update_session(
             detail={"error": True, "code": "SESSION_NOT_FOUND", "message": "Sesión no encontrada"},
         )
     update_data = payload.model_dump(exclude_unset=True)
+
+    # Detectar si se están modificando fechas para decidir si recalcular
+    recalculate = "fecha_entrada" in update_data or "fecha_salida" in update_data
+
     for key, value in update_data.items():
         setattr(session, key, value)
     session.modificado_por = current_user.id
     session.fecha_modificacion = datetime.now(timezone.utc)
 
-    # Recalculate if closing
-    if session.fecha_salida and session.fecha_entrada:
+    # Recalcular solo si cambiaron fechas y la sesión tiene entrada y salida
+    if recalculate and session.fecha_salida and session.fecha_entrada:
         worker = db.query(User).filter(User.id == session.user_id).first()
         jornada = float(worker.jornada_horas_diarias) if worker else 8.0
         horas_netas, horas_extra = compute_session_hours(session, db, jornada)
@@ -243,9 +246,11 @@ def today_summary(
     current_user: User = Depends(require_admin_or_rrhh),
 ):
     """Dashboard summary: how many workers clocked in, paused, out, absent today."""
-    from datetime import date as date_cls
-    today_start = datetime.combine(date_cls.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
-    today_end = datetime.combine(date_cls.today(), datetime.max.time()).replace(tzinfo=timezone.utc)
+    import pytz
+    madrid_tz = pytz.timezone("Europe/Madrid")
+    now_madrid = datetime.now(madrid_tz)
+    today_start = now_madrid.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+    today_end = now_madrid.replace(hour=23, minute=59, second=59, microsecond=999999).astimezone(timezone.utc)
 
     workers = db.query(User).filter(User.rol == RolEnum.worker, User.activo == True).all()
     total = len(workers)
@@ -278,11 +283,13 @@ def export_report(
     start_date: date = Query(...),
     end_date: date = Query(...),
     user_id: Optional[uuid.UUID] = Query(None),
-    format: str = Query("csv"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_or_rrhh),
 ):
     """Export attendance report as CSV."""
+    import pytz
+    madrid_tz = pytz.timezone("Europe/Madrid")
+
     start_dt = datetime.combine(start_date, datetime.min.time()).replace(tzinfo=timezone.utc)
     end_dt = datetime.combine(end_date, datetime.max.time()).replace(tzinfo=timezone.utc)
 
@@ -294,6 +301,12 @@ def export_report(
         q = q.filter(WorkSession.user_id == user_id)
     sessions = q.order_by(WorkSession.fecha_entrada).all()
 
+    # Cargar todos los usuarios necesarios de una sola query (evita N+1)
+    user_ids = list({s.user_id for s in sessions})
+    workers_map = {
+        u.id: u for u in db.query(User).filter(User.id.in_(user_ids)).all()
+    }
+
     import csv as csv_mod
     from io import StringIO
 
@@ -304,12 +317,15 @@ def export_report(
         "Estado", "Horas netas", "Horas extra", "IP entrada",
     ])
     for s in sessions:
-        worker = db.query(User).filter(User.id == s.user_id).first()
+        worker = workers_map.get(s.user_id)
+        # Convertir timestamps a Europe/Madrid para el CSV
+        entrada_madrid = s.fecha_entrada.astimezone(madrid_tz) if s.fecha_entrada else None
+        salida_madrid = s.fecha_salida.astimezone(madrid_tz) if s.fecha_salida else None
         writer.writerow([
             f"{worker.nombre} {worker.apellidos}" if worker else str(s.user_id),
             worker.dni if worker else "",
-            s.fecha_entrada.strftime("%d/%m/%Y %H:%M") if s.fecha_entrada else "",
-            s.fecha_salida.strftime("%d/%m/%Y %H:%M") if s.fecha_salida else "",
+            entrada_madrid.strftime("%d/%m/%Y %H:%M") if entrada_madrid else "",
+            salida_madrid.strftime("%d/%m/%Y %H:%M") if salida_madrid else "",
             s.estado.value if s.estado else "",
             str(s.horas_netas) if s.horas_netas is not None else "",
             str(s.horas_extra) if s.horas_extra is not None else "",

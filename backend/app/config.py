@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from typing import List
 
 
 class Settings(BaseSettings):
@@ -15,6 +16,7 @@ class Settings(BaseSettings):
     admin_nombre: str = "Administrador"
     admin_apellidos: str = "Sistema"
     environment: str = "production"
+    allowed_origins: List[str] = ["http://localhost:3000", "http://localhost:80", "http://localhost"]
 
     class Config:
         env_file = ".env"

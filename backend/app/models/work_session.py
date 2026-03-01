@@ -1,5 +1,6 @@
 import uuid
 import enum
+from datetime import datetime
 from sqlalchemy import String, Boolean, Numeric, TIMESTAMP, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -18,8 +19,8 @@ class WorkSession(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    fecha_entrada: Mapped[str] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
-    fecha_salida: Mapped[str | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    fecha_entrada: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
+    fecha_salida: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     estado: Mapped[SessionEstadoEnum] = mapped_column(nullable=False, default=SessionEstadoEnum.abierta)
     ip_entrada: Mapped[str | None] = mapped_column(String(45), nullable=True)
     ip_salida: Mapped[str | None] = mapped_column(String(45), nullable=True)
@@ -32,8 +33,8 @@ class WorkSession(Base):
     horas_netas: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
     horas_extra: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
     modificado_por: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    fecha_modificacion: Mapped[str | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
-    created_at: Mapped[str] = mapped_column(
+    fecha_modificacion: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
 

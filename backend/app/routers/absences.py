@@ -6,14 +6,19 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.models.absence import Absence, AusenciaEstadoEnum
-from app.models.work_session import WorkSession, SessionEstadoEnum
 from app.schemas.absence import AbsenceCreate, AbsenceReview, AbsenceOut
 from app.services.auth_service import get_current_user, require_admin_or_rrhh
 
 router = APIRouter(prefix="/absences", tags=["absences"])
 
 
-def _check_overlap(db: Session, user_id: uuid.UUID, fecha_inicio: date, fecha_fin: date, exclude_id: Optional[uuid.UUID] = None):
+def _check_overlap(
+    db: Session,
+    user_id: uuid.UUID,
+    fecha_inicio: date,
+    fecha_fin: date,
+    exclude_id: Optional[uuid.UUID] = None,
+):
     q = db.query(Absence).filter(
         Absence.user_id == user_id,
         Absence.estado != AusenciaEstadoEnum.denegada,
@@ -42,7 +47,6 @@ def create_absence(
             status_code=status.HTTP_409_CONFLICT,
             detail={"error": True, "code": "ABSENCE_OVERLAP", "message": "Ya tienes una ausencia en ese rango de fechas"},
         )
-    # Warn about existing closed sessions in the date range (returns 201 but adds warning in response)
     absence = Absence(
         user_id=current_user.id,
         tipo=payload.tipo,
@@ -58,16 +62,25 @@ def create_absence(
 
 @router.get("/my", response_model=List[AbsenceOut])
 def get_my_absences(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return db.query(Absence).filter(Absence.user_id == current_user.id).order_by(Absence.fecha_inicio.desc()).all()
+    q = db.query(Absence).filter(Absence.user_id == current_user.id)
+    if start_date:
+        q = q.filter(Absence.fecha_fin >= start_date)
+    if end_date:
+        q = q.filter(Absence.fecha_inicio <= end_date)
+    return q.order_by(Absence.fecha_inicio.desc()).all()
 
 
 @router.get("/all", response_model=List[AbsenceOut])
 def get_all_absences(
     user_id: Optional[uuid.UUID] = Query(None),
     estado: Optional[AusenciaEstadoEnum] = Query(None),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_or_rrhh),
 ):
@@ -76,6 +89,10 @@ def get_all_absences(
         q = q.filter(Absence.user_id == user_id)
     if estado:
         q = q.filter(Absence.estado == estado)
+    if start_date:
+        q = q.filter(Absence.fecha_fin >= start_date)
+    if end_date:
+        q = q.filter(Absence.fecha_inicio <= end_date)
     return q.order_by(Absence.created_at.desc()).all()
 
 
