@@ -7,26 +7,26 @@ import {
 } from 'lucide-react'
 
 const workerLinks = [
-  { to: '/worker', label: 'Inicio', icon: LayoutDashboard },
-  { to: '/worker/records', label: 'Mis Registros', icon: Clock },
-  { to: '/worker/absences', label: 'Ausencias', icon: Calendar },
-  { to: '/worker/documents', label: 'Documentos', icon: FileText },
+  { to: '/worker',           label: 'Inicio',       icon: LayoutDashboard },
+  { to: '/worker/records',   label: 'Mis Registros', icon: Clock },
+  { to: '/worker/absences',  label: 'Ausencias',    icon: Calendar },
+  { to: '/worker/documents', label: 'Documentos',   icon: FileText },
 ]
 
 const hrLinks = [
-  { to: '/hr', label: 'Inicio', icon: LayoutDashboard },
-  { to: '/hr/records', label: 'Registros', icon: ClipboardList },
-  { to: '/hr/absences', label: 'Ausencias', icon: Calendar },
-  { to: '/hr/documents', label: 'Documentos', icon: FileText },
+  { to: '/hr',           label: 'Inicio',      icon: LayoutDashboard },
+  { to: '/hr/records',   label: 'Registros',   icon: ClipboardList },
+  { to: '/hr/absences',  label: 'Ausencias',   icon: Calendar },
+  { to: '/hr/documents', label: 'Documentos',  icon: FileText },
 ]
 
 const adminLinks = [
-  { to: '/admin', label: 'Inicio', icon: LayoutDashboard },
-  { to: '/admin/users', label: 'Usuarios', icon: Users },
-  { to: '/admin/records', label: 'Registros', icon: ClipboardList },
-  { to: '/admin/absences', label: 'Ausencias', icon: Calendar },
-  { to: '/admin/documents', label: 'Documentos', icon: FileText },
-  { to: '/admin/reports', label: 'Informes', icon: FileText },
+  { to: '/admin',           label: 'Inicio',      icon: LayoutDashboard },
+  { to: '/admin/users',     label: 'Usuarios',    icon: Users },
+  { to: '/admin/records',   label: 'Registros',   icon: ClipboardList },
+  { to: '/admin/absences',  label: 'Ausencias',   icon: Calendar },
+  { to: '/admin/documents', label: 'Documentos',  icon: FileText },
+  { to: '/admin/reports',   label: 'Informes',    icon: FileText },
 ]
 
 const roleLabels = { admin: 'Admin', rrhh: 'RRHH', worker: 'Trabajador' }
@@ -42,144 +42,154 @@ export default function Navbar() {
     : user?.rol === 'rrhh' ? hrLinks
     : workerLinks
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+  const handleLogout = () => { logout(); navigate('/login') }
+
+  const sidebar = (
+    <aside style={{
+      width: '256px',
+      backgroundColor: 'var(--sidebar-bg)',
+      color: 'var(--sidebar-fg)',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      zIndex: 40,
+    }}>
+      {/* Logo */}
+      <div style={{ padding: '2rem 2rem 1.5rem', fontSize: '1.2rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
+        Control Horario
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
+        <ul style={{ listStyle: 'none' }}>
+          {links.map(({ to, label, icon: Icon }) => {
+            const active = location.pathname === to
+            return (
+              <li key={to}>
+                <Link
+                  to={to}
+                  onClick={() => setOpen(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.75rem 0.5rem 0.75rem 2rem',
+                    fontSize: '0.9rem',
+                    fontWeight: active ? 500 : 400,
+                    color: active ? '#ffffff' : 'var(--sidebar-muted)',
+                    textDecoration: 'none',
+                    position: 'relative',
+                    backgroundColor: active ? 'var(--sidebar-active)' : 'transparent',
+                    transition: 'color 0.15s, background-color 0.15s',
+                  }}
+                  onMouseEnter={e => {
+                    if (!active) e.currentTarget.style.color = '#ffffff'
+                  }}
+                  onMouseLeave={e => {
+                    if (!active) e.currentTarget.style.color = 'var(--sidebar-muted)'
+                  }}
+                >
+                  {/* Barra lateral activa */}
+                  {active && (
+                    <span style={{
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      height: '100%',
+                      width: '4px',
+                      backgroundColor: 'var(--sidebar-accent)',
+                      borderTopRightRadius: '4px',
+                      borderBottomRightRadius: '4px',
+                    }} />
+                  )}
+                  <Icon size={15} style={{ flexShrink: 0 }} />
+                  {label}
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      </nav>
+
+      {/* User footer */}
+      <div style={{
+        margin: '1rem',
+        backgroundColor: 'var(--sidebar-note-bg)',
+        borderRadius: '10px',
+        padding: '1rem',
+      }}>
+        <p style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem', color: '#fff' }}>
+          {user?.nombre} {user?.apellidos}
+        </p>
+        <p style={{ fontSize: '0.75rem', color: 'var(--sidebar-muted)', marginBottom: '0.75rem' }}>
+          {roleLabels[user?.rol]}
+        </p>
+        <button
+          onClick={handleLogout}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'none',
+            border: 'none',
+            color: 'var(--sidebar-muted)',
+            cursor: 'pointer',
+            fontSize: '0.8rem',
+            padding: 0,
+            transition: 'color 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = '#ff6b6b'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--sidebar-muted)'}
+        >
+          <LogOut size={13} />
+          Cerrar sesión
+        </button>
+      </div>
+    </aside>
+  )
 
   return (
     <>
-      {/* Mobile top bar */}
-      <header style={{
-        backgroundColor: 'var(--surface-card)',
-        borderBottom: '1px solid var(--surface-border)',
-      }} className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center px-4 justify-between">
-        <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5" style={{ color: 'var(--primary)' }} />
-          <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-            Control Horario
-          </span>
-        </div>
+      {/* Desktop sidebar */}
+      <div className="hidden lg:block">{sidebar}</div>
+
+      {/* Mobile topbar */}
+      <header
+        className="lg:hidden"
+        style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40,
+          backgroundColor: 'var(--sidebar-bg)', color: '#fff',
+          height: '3.5rem', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', padding: '0 1rem',
+        }}
+      >
+        <span style={{ fontWeight: 700 }}>Control Horario</span>
         <button
           onClick={() => setOpen(!open)}
-          className="p-2 rounded-lg"
-          style={{ color: 'var(--text-secondary)' }}
-          aria-label="Abrir menú"
+          style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
         >
-          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {open ? <X size={20} /> : <Menu size={20} />}
         </button>
       </header>
 
       {/* Mobile overlay */}
       {open && (
         <div
-          className="lg:hidden fixed inset-0 z-30"
-          style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
+          className="lg:hidden"
+          style={{ position: 'fixed', inset: 0, zIndex: 35, backgroundColor: 'rgba(0,0,0,0.5)' }}
           onClick={() => setOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 z-40 flex flex-col transition-transform duration-200
-          lg:translate-x-0
-          ${open ? 'translate-x-0' : '-translate-x-full'}
-          top-14 lg:top-0
-        `}
-        style={{
-          backgroundColor: 'var(--surface-card)',
-          borderRight: '1px solid var(--surface-border)',
-        }}
-      >
-        {/* Logo — solo desktop */}
-        <div
-          className="hidden lg:flex items-center gap-3 px-5 h-16"
-          style={{ borderBottom: '1px solid var(--surface-border)' }}
-        >
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: 'var(--primary)' }}>
-            <Clock className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
-            Control Horario
-          </span>
+      {/* Mobile drawer */}
+      {open && (
+        <div className="lg:hidden" style={{ position: 'fixed', top: '3.5rem', left: 0, bottom: 0, zIndex: 40, width: '256px' }}>
+          {sidebar}
         </div>
-
-        {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
-          <ul className="space-y-0.5">
-            {links.map(({ to, label, icon: Icon }) => {
-              const active = location.pathname === to
-              return (
-                <li key={to}>
-                  <Link
-                    to={to}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                    style={active ? {
-                      backgroundColor: 'var(--primary)',
-                      color: '#ffffff',
-                    } : {
-                      color: 'var(--text-secondary)',
-                    }}
-                    onMouseEnter={e => {
-                      if (!active) {
-                        e.currentTarget.style.backgroundColor = 'var(--surface)'
-                        e.currentTarget.style.color = 'var(--text-primary)'
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!active) {
-                        e.currentTarget.style.backgroundColor = ''
-                        e.currentTarget.style.color = 'var(--text-secondary)'
-                      }
-                    }}
-                  >
-                    <Icon className="w-4 h-4 flex-shrink-0" />
-                    {label}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
-
-        {/* User footer */}
-        <div className="p-4" style={{ borderTop: '1px solid var(--surface-border)' }}>
-          <div className="flex items-center gap-3 mb-3">
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
-              style={{ backgroundColor: 'rgba(37,99,235,0.1)', color: 'var(--primary)' }}
-            >
-              {user?.nombre?.[0]}{user?.apellidos?.[0]}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
-                {user?.nombre} {user?.apellidos}
-              </p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                {roleLabels[user?.rol]}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = '#fef2f2'
-              e.currentTarget.style.color = '#dc2626'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = ''
-              e.currentTarget.style.color = 'var(--text-secondary)'
-            }}
-          >
-            <LogOut className="w-4 h-4" />
-            Cerrar sesión
-          </button>
-        </div>
-      </aside>
+      )}
     </>
   )
 }
