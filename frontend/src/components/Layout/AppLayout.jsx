@@ -4,10 +4,17 @@ export default function AppLayout({ children }) {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
       <Navbar />
-      {/* pt-14 en móvil para el topbar, lg:pl-64 en desktop para el sidebar */}
-      <main className="lg:pl-64 pt-14 lg:pt-0 min-h-screen">
-        <div className="max-w-5xl mx-auto px-4 py-6 lg:px-8 lg:py-8">
-          {children}
+      <main className="min-h-screen" style={{ paddingTop: '3.5rem' }}>
+        {/* Desplazar contenido 256px a la derecha en desktop para no solapar con sidebar */}
+        <style>{`
+          @media (min-width: 1024px) {
+            .app-main { padding-top: 0 !important; padding-left: 256px; }
+          }
+        `}</style>
+        <div className="app-main min-h-screen" style={{ paddingTop: '3.5rem' }}>
+          <div style={{ maxWidth: '1024px', margin: '0 auto', padding: '1.5rem 1rem' }}>
+            {children}
+          </div>
         </div>
       </main>
     </div>
