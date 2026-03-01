@@ -24,6 +24,7 @@ export default function WorkerDocuments() {
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState(null)
+  const [downloadError, setDownloadError] = useState(null)
 
   const load = () => {
     setLoading(true)
@@ -53,6 +54,7 @@ export default function WorkerDocuments() {
   }
 
   const handleDownload = async (doc) => {
+    setDownloadError(null)
     try {
       const res = await downloadDocument(doc.id)
       const url = URL.createObjectURL(new Blob([res.data], { type: doc.tipo_mime }))
@@ -62,7 +64,7 @@ export default function WorkerDocuments() {
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      // silently fail
+      setDownloadError('No se pudo descargar el documento. Inténtalo de nuevo.')
     }
   }
 
@@ -75,6 +77,13 @@ export default function WorkerDocuments() {
           Subir fichero
         </button>
       </div>
+
+      {downloadError && (
+        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          {downloadError}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12">

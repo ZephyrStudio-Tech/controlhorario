@@ -27,15 +27,19 @@ export default function Login() {
         tokenRes = await loginDNI(dni)
       }
       const tokens = tokenRes.data
+      // Guardamos el token antes de llamar a getMe para que el interceptor lo use
       localStorage.setItem('access_token', tokens.access_token)
       localStorage.setItem('refresh_token', tokens.refresh_token)
       const meRes = await getMe()
+      // login() actualiza el estado del contexto, no vuelve a guardar tokens
       login(tokens, meRes.data)
       const rol = meRes.data.rol
       if (rol === 'admin') navigate('/admin')
       else if (rol === 'rrhh') navigate('/hr')
       else navigate('/worker')
     } catch (err) {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
       setError(err.response?.data?.detail?.message || 'Error al iniciar sesión')
     } finally {
       setLoading(false)

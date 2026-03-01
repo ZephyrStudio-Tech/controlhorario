@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useCurrentSession } from '../../hooks/useCurrentSession'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { clockIn, clockOut, startPause, endPause, getMySessions } from '../../api/sessions'
-import { LogIn, LogOut, Coffee, Play, AlertTriangle, Clock, CheckCircle } from 'lucide-react'
+import { LogIn, LogOut, Coffee, Play, AlertTriangle, Clock } from 'lucide-react'
 import { format, differenceInSeconds, startOfWeek, endOfWeek } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -30,12 +30,10 @@ export default function WorkerDashboard() {
   const { session, loading, refresh } = useCurrentSession()
   const { request: requestGeo } = useGeolocation()
   const [actionLoading, setActionLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(false)
   const [weekStats, setWeekStats] = useState(null)
-  const [pauseType, setPauseType] = useState('descanso')
   const [showPauseSelect, setShowPauseSelect] = useState(false)
 
-  // Load week stats
   useEffect(() => {
     const now = new Date()
     const start = format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd')
@@ -47,18 +45,6 @@ export default function WorkerDashboard() {
       setWeekStats({ dias: closed.length, horas: totalHoras.toFixed(1) })
     })
   }, [session])
-
-  // Over 6h without pause warning
-  const showSixHourWarning = (() => {
-    if (!session || session.estado !== 'abierta') return false
-    const mins = differenceInSeconds(new Date(), new Date(session.fecha_entrada)) / 60
-    const pausedMins = (session.pauses || [])
-      .filter((p) => p.fin_pausa)
-      .reduce((acc, p) => {
-        return acc + differenceInSeconds(new Date(p.fin_pausa), new Date(p.inicio_pausa)) / 60
-      }, 0)
-    return (mins - pausedMins) > 360
-  })()
 
   const doAction = async (action) => {
     setActionLoading(true)
@@ -109,7 +95,6 @@ export default function WorkerDashboard() {
         </p>
       </div>
 
-      {/* Current status card */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-6">
           <span className={`badge text-sm px-3 py-1 rounded-full font-semibold ${stateColor}`}>
@@ -122,7 +107,6 @@ export default function WorkerDashboard() {
           )}
         </div>
 
-        {/* Timer */}
         <div className="flex flex-col items-center py-4">
           {session?.estado === 'abierta' && (
             <ElapsedTimer since={session.fecha_entrada} />
@@ -141,14 +125,6 @@ export default function WorkerDashboard() {
           )}
         </div>
 
-        {/* Warning */}
-        {showSixHourWarning && (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 text-sm text-amber-700">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-            Llevas más de 6 horas trabajando. Recuerda tomarte un descanso.
-          </div>
-        )}
-
         {error && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 text-sm text-red-700">
             <AlertTriangle className="w-4 h-4 flex-shrink-0" />
@@ -156,7 +132,6 @@ export default function WorkerDashboard() {
           </div>
         )}
 
-        {/* Action buttons */}
         <div className="flex flex-col gap-3 mt-4">
           {!session && (
             <button
@@ -223,7 +198,6 @@ export default function WorkerDashboard() {
         </div>
       </div>
 
-      {/* Week summary */}
       {weekStats && (
         <div className="grid grid-cols-2 gap-4">
           <div className="card p-5">
