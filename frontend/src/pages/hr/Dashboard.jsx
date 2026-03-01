@@ -9,12 +9,12 @@ import { useNavigate } from 'react-router-dom'
 
 function StatCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="card p-5 flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-        <Icon className="w-5 h-5" />
+    <div className="card p-6 flex items-center gap-5">
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${color}`}>
+        <Icon className="w-6 h-6" />
       </div>
       <div>
-        <p className="text-2xl font-bold text-text-primary leading-none mb-1">{value}</p>
+        <p className="text-3xl font-bold text-text-primary leading-none mb-1.5">{value}</p>
         <p className="text-sm text-text-muted">{label}</p>
       </div>
     </div>
@@ -60,7 +60,7 @@ export default function HRDashboard() {
       {/* Today stats */}
       <div>
         <h2 className="section-heading">Hoy</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-5">
           <StatCard
             icon={Clock}
             label="Trabajando ahora"
@@ -113,7 +113,7 @@ export default function HRDashboard() {
         ) : (
           <div className="space-y-2.5">
             {pendingAbsences.slice(0, 5).map((a) => (
-              <div key={a.id} className="card px-5 py-3.5 flex items-center justify-between gap-3">
+              <div key={a.id} className="card px-5 py-4 flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-sm text-text-primary truncate">
                     {a.user?.nombre} {a.user?.apellidos}
@@ -148,7 +148,7 @@ export default function HRDashboard() {
         ) : (
           <div className="space-y-2.5">
             {recentDocs.slice(0, 4).map((d) => (
-              <div key={d.id} className="card px-5 py-3.5 flex items-center gap-3">
+              <div key={d.id} className="card px-5 py-4 flex items-center gap-3">
                 <FileText className="w-4 h-4 text-text-muted flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-text-primary truncate">{d.nombre_original}</p>

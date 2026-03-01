@@ -199,15 +199,15 @@ export default function WorkerDashboard() {
       </div>
 
       {weekStats && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="card p-5">
+        <div className="grid grid-cols-2 gap-5">
+          <div className="card p-6">
             <p className="text-xs text-text-muted uppercase tracking-wide mb-2 font-semibold">Esta semana</p>
-            <p className="text-3xl font-bold text-text-primary leading-none mb-1">{weekStats.dias}</p>
+            <p className="text-3xl font-bold text-text-primary leading-none mb-1.5">{weekStats.dias}</p>
             <p className="text-sm text-text-secondary">días fichados</p>
           </div>
-          <div className="card p-5">
+          <div className="card p-6">
             <p className="text-xs text-text-muted uppercase tracking-wide mb-2 font-semibold">Horas netas</p>
-            <p className="text-3xl font-bold text-text-primary leading-none mb-1">{weekStats.horas}h</p>
+            <p className="text-3xl font-bold text-text-primary leading-none mb-1.5">{weekStats.horas}h</p>
             <p className="text-sm text-text-secondary">esta semana</p>
           </div>
         </div>

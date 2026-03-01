@@ -24,7 +24,7 @@ function SessionRow({ s, onEdit }) {
   return (
     <div className="card">
       <button
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
+        className="w-full flex items-center justify-between px-5 py-4 text-left"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex-1 min-w-0">
@@ -47,7 +47,7 @@ function SessionRow({ s, onEdit }) {
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 border-t border-surface-border pt-3 space-y-2">
+          <div className="px-5 pb-5 border-t border-surface-border pt-4 space-y-2">
           <div className="grid grid-cols-3 gap-3 text-xs">
             <div>
               <span className="text-text-muted">Horas netas</span>
@@ -149,10 +149,13 @@ export default function AdminRecords() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-text-primary">Registros de jornada</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">Registros de jornada</h1>
+        <p className="text-text-muted text-sm mt-1">Consulta y edita los fichajes de todos los trabajadores.</p>
+      </div>
 
       {/* Filters */}
-      <div className="card p-4 space-y-3">
+      <div className="card p-5 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Trabajador</label>

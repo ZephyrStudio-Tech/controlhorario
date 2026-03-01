@@ -17,7 +17,7 @@ const EMPTY_FORM = {
 
 function UserRow({ user, onEdit, onDeactivate }) {
   return (
-    <div className="card px-4 py-3 flex items-center gap-4">
+    <div className="card px-5 py-4 flex items-center gap-4">
       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 font-semibold text-primary text-sm">
         {user.nombre[0]}{user.apellidos[0]}
       </div>
@@ -145,16 +145,19 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-primary">Usuarios</h1>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Usuarios</h1>
+          <p className="text-text-muted text-sm mt-1">Gestiona trabajadores, roles y jornadas.</p>
+        </div>
         <button className="btn-primary flex items-center gap-2" onClick={openCreate}>
           <Plus className="w-4 h-4" />
-          Nuevo
+          Nuevo usuario
         </button>
       </div>
 
       {/* Filters */}
-      <div className="card p-4 flex flex-wrap gap-3">
+      <div className="card p-5 flex flex-wrap gap-3">
         <div className="flex-1 min-w-32">
           <label className="label">Rol</label>
           <select className="input" value={filterRol} onChange={(e) => setFilterRol(e.target.value)}>

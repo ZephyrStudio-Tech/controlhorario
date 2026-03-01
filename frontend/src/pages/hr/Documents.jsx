@@ -47,10 +47,13 @@ export default function HRDocuments() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-text-primary">Documentos</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">Documentos</h1>
+        <p className="text-text-muted text-sm mt-1">Consulta los documentos subidos por los trabajadores.</p>
+      </div>
 
       {/* Filter */}
-      <div className="card p-4 flex gap-3">
+      <div className="card p-5 flex gap-3">
         <div className="flex-1">
           <label className="label">Filtrar por trabajador</label>
           <select
@@ -85,7 +88,7 @@ export default function HRDocuments() {
         <div className="space-y-3">
           <p className="text-xs text-text-muted">{docs.length} documentos</p>
           {docs.map((doc) => (
-            <div key={doc.id} className="card px-4 py-3 flex items-center gap-4">
+            <div key={doc.id} className="card px-5 py-4 flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <FileText className="w-5 h-5 text-primary" />
               </div>

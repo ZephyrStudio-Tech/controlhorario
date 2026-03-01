@@ -9,12 +9,12 @@ import { useNavigate } from 'react-router-dom'
 
 function StatCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="card p-5 flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-        <Icon className="w-5 h-5" />
+    <div className="card p-6 flex items-center gap-5">
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${color}`}>
+        <Icon className="w-6 h-6" />
       </div>
       <div>
-        <p className="text-2xl font-bold text-text-primary leading-none mb-1">{value}</p>
+        <p className="text-3xl font-bold text-text-primary leading-none mb-1.5">{value}</p>
         <p className="text-sm text-text-muted">{label}</p>
       </div>
     </div>
@@ -27,7 +27,7 @@ function QuickLink({ label, description, path, navigate }) {
       className="card p-5 text-left w-full hover:shadow-md hover:border-primary/30 transition-all"
       onClick={() => navigate(path)}
     >
-      <p className="font-semibold text-sm text-text-primary mb-1">{label}</p>
+      <p className="font-semibold text-sm text-text-primary mb-1.5">{label}</p>
       <p className="text-xs text-text-muted leading-relaxed">{description}</p>
     </button>
   )
@@ -68,7 +68,7 @@ export default function AdminDashboard() {
       {/* Today stats */}
       <div>
         <h2 className="section-heading">Estado del día</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-5">
           <StatCard icon={Clock} label="Trabajando ahora" value={stats?.activos_hoy ?? 0} color="bg-green-100 text-green-700" />
           <StatCard icon={Coffee} label="En pausa" value={stats?.en_pausa ?? 0} color="bg-amber-100 text-amber-700" />
           <StatCard icon={LogOut} label="Han salido" value={stats?.han_salido ?? 0} color="bg-blue-100 text-blue-700" />
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
       {/* Accesos rápidos */}
       <div>
         <h2 className="section-heading">Acceso rápido</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-5">
           <QuickLink label="Usuarios" description="Gestionar trabajadores y roles" path="/admin/users" navigate={navigate} />
           <QuickLink label="Registros" description="Ver y editar jornadas" path="/admin/records" navigate={navigate} />
           <QuickLink label="Ausencias" description="Aprobar solicitudes" path="/admin/absences" navigate={navigate} />
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
         ) : (
           <div className="space-y-2.5">
             {pendingAbsences.slice(0, 5).map((a) => (
-              <div key={a.id} className="card px-5 py-3.5 flex items-center justify-between gap-3">
+              <div key={a.id} className="card px-5 py-4 flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-sm text-text-primary truncate">
                     {a.user?.nombre} {a.user?.apellidos}

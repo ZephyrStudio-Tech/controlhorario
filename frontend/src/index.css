@@ -247,13 +247,41 @@ textarea.input { resize: vertical; min-height: 5rem; }
 /* ─── Stat card icon wrappers ───────────────────────────────── */
 
 .stat-icon {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 3rem;
+  height: 3rem;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+/* ─── Stat card ─────────────────────────────────────────────── */
+
+.stat-card {
+  background: var(--surface-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-sm);
+  padding: 1.375rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+/* ─── List row card ─────────────────────────────────────────── */
+
+.row-card {
+  background: var(--surface-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-sm);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  transition: box-shadow 0.15s, border-color 0.15s;
 }
 
 /* ─── Filter panel ──────────────────────────────────────────── */

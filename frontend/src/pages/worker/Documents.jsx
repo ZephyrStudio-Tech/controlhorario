@@ -12,11 +12,6 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function mimeIcon(mime) {
-  if (mime === 'application/pdf') return '📄'
-  return '🖼'
-}
-
 export default function WorkerDocuments() {
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
@@ -70,9 +65,12 @@ export default function WorkerDocuments() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-primary">Mis Documentos</h1>
-        <button className="btn-primary" onClick={() => setShowModal(true)}>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Mis Documentos</h1>
+          <p className="text-text-muted text-sm mt-1">Sube y descarga tus documentos personales.</p>
+        </div>
+        <button className="btn-primary flex items-center gap-2" onClick={() => setShowModal(true)}>
           <Plus className="w-4 h-4" />
           Subir fichero
         </button>
@@ -97,17 +95,20 @@ export default function WorkerDocuments() {
       ) : (
         <div className="space-y-3">
           {documents.map((doc) => (
-            <div key={doc.id} className="card p-4 flex items-center gap-4">
-              <div className="text-2xl flex-shrink-0">{mimeIcon(doc.tipo_mime)}</div>
+            <div key={doc.id} className="card px-5 py-4 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-5 h-5 text-primary" />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-text-primary text-sm truncate">{doc.nombre_original}</p>
                 <p className="text-xs text-text-muted mt-0.5">
-                  {formatBytes(doc.tamaño_bytes)} &bull;{' '}
+                  {formatBytes(doc.tamaño_bytes)}
+                  {' · '}
                   {format(new Date(doc.subido_en), 'd MMM yyyy, HH:mm', { locale: es })}
                 </p>
               </div>
               <button
-                className="btn-secondary p-2"
+                className="btn-ghost p-2"
                 onClick={() => handleDownload(doc)}
                 aria-label="Descargar"
               >
