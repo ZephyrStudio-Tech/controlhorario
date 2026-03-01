@@ -2,6 +2,7 @@ import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from app.database import get_db
 from app.models.user import User, RolEnum
 from app.schemas.user import UserCreate, UserUpdate, UserOut
@@ -13,6 +14,27 @@ from app.services.auth_service import (
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+
+class UserSimple(BaseModel):
+    id: uuid.UUID
+    nombre: str
+    apellidos: str
+    model_config = {"from_attributes": True}
+
+
+@router.get("/simple", response_model=List[UserSimple])
+def list_users_simple(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_or_rrhh),
+):
+    """Lista reducida de usuarios activos (id, nombre, apellidos) para filtros de RRHH."""
+    return (
+        db.query(User)
+        .filter(User.activo == True)
+        .order_by(User.apellidos)
+        .all()
+    )
 
 
 @router.get("/", response_model=List[UserOut])
@@ -142,7 +164,6 @@ def deactivate_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": True, "code": "SELF_DEACTIVATE", "message": "No puedes desactivarte a ti mismo"},
         )
-    # Evitar que se desactive el último admin activo
     if user.rol == RolEnum.admin:
         active_admins = db.query(User).filter(
             User.rol == RolEnum.admin,
