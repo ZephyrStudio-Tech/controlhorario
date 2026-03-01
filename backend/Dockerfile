@@ -17,11 +17,14 @@ COPY . .
 # Storage directory
 RUN mkdir -p /storage/documents
 
-# (Mantén todo igual hasta el USER app)
+# Create non-root user (Sintaxis correcta para Debian/Ubuntu)
+RUN groupadd -r app && useradd -r -g app app
+RUN chown -R app:app /app /storage
+
+# Entrypoint script
 COPY entrypoint.sh /entrypoint.sh
-# Necesitamos ser root un segundo para dar permisos de ejecución
-USER root
 RUN chmod +x /entrypoint.sh
+
 USER app
 
 EXPOSE 8000
