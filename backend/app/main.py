@@ -40,18 +40,7 @@ def create_initial_admin():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Run Alembic migrations on startup
-    import subprocess
-    import sys
-    result = subprocess.run(
-        [sys.executable, "-m", "alembic", "upgrade", "head"],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        logger.error(f"Alembic migration failed: {result.stderr}")
-    else:
-        logger.info("Alembic migrations applied successfully")
+    # La migración ahora se hace en el entrypoint.sh
     create_initial_admin()
     yield
 

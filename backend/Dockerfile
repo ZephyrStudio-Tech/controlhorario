@@ -17,13 +17,16 @@ COPY . .
 # Storage directory
 RUN mkdir -p /storage/documents
 
-# Create non-root user
-RUN addgroup --system app && adduser --system --ingroup app app
-RUN chown -R app:app /app /storage
+# (Mantén todo igual hasta el USER app)
+COPY entrypoint.sh /entrypoint.sh
+# Necesitamos ser root un segundo para dar permisos de ejecución
+USER root
+RUN chmod +x /entrypoint.sh
 USER app
 
 EXPOSE 8000
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["gunicorn", "app.main:app", \
      "--workers", "4", \
      "--worker-class", "uvicorn.workers.UvicornWorker", \
