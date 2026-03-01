@@ -23,7 +23,7 @@ const TIPOS = {
 
 function AbsenceCard({ absence, onReview }) {
   return (
-    <div className="card p-4 space-y-3">
+    <div className="card p-5 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-text-primary">
@@ -127,9 +127,12 @@ export default function AdminAbsences() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-text-primary">Gestión de ausencias</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">Gestión de ausencias</h1>
+        <p className="text-text-muted text-sm mt-1">Aprueba o deniega las solicitudes de ausencia.</p>
+      </div>
 
-      <div className="card p-4 flex flex-wrap gap-3">
+      <div className="card p-5 flex flex-wrap gap-3">
         <div className="flex-1 min-w-36">
           <label className="label">Trabajador</label>
           <select className="input" value={filters.user_id} onChange={(e) => setFilters({ ...filters, user_id: e.target.value })}>

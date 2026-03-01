@@ -22,7 +22,7 @@ function SessionRow({ s }) {
   return (
     <div className="card">
       <button
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
+        className="w-full flex items-center justify-between px-5 py-4 text-left"
         onClick={() => setExpanded(!expanded)}
       >
         <div>
@@ -44,7 +44,7 @@ function SessionRow({ s }) {
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 border-t border-surface-border pt-3 space-y-2">
+          <div className="px-5 pb-5 border-t border-surface-border pt-4 space-y-2">
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
               <span className="text-text-muted">Horas extra</span>
@@ -103,10 +103,13 @@ export default function MyRecords() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-text-primary">Mis Registros</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">Mis Registros</h1>
+        <p className="text-text-muted text-sm mt-1">Consulta el historial de tus fichajes.</p>
+      </div>
 
       {/* Filters */}
-      <div className="card p-4 flex flex-wrap gap-3">
+      <div className="card p-5 flex flex-wrap gap-3">
         <div>
           <label className="label">Desde</label>
           <input type="date" className="input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />

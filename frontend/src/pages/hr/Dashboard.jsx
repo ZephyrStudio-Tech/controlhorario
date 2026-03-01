@@ -9,13 +9,13 @@ import { useNavigate } from 'react-router-dom'
 
 function StatCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="card p-4 flex items-center gap-4">
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-        <Icon className="w-5 h-5" />
+    <div className="card p-6 flex items-center gap-5">
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${color}`}>
+        <Icon className="w-6 h-6" />
       </div>
       <div>
-        <p className="text-2xl font-bold text-text-primary">{value}</p>
-        <p className="text-xs text-text-muted">{label}</p>
+        <p className="text-3xl font-bold text-text-primary leading-none mb-1.5">{value}</p>
+        <p className="text-sm text-text-muted">{label}</p>
       </div>
     </div>
   )
@@ -49,18 +49,18 @@ export default function HRDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Panel de RRHH</h1>
-        <p className="text-text-muted text-sm mt-1">
+        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Panel de RRHH</h1>
+        <p className="text-text-muted text-sm mt-1.5">
           {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
         </p>
       </div>
 
       {/* Today stats */}
       <div>
-        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">Hoy</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <h2 className="section-heading">Hoy</h2>
+        <div className="grid grid-cols-2 gap-5">
           <StatCard
             icon={Clock}
             label="Trabajando ahora"
@@ -83,7 +83,7 @@ export default function HRDashboard() {
             icon={UserX}
             label="Sin fichar"
             value={stats?.sin_fichar ?? 0}
-            color="bg-surface-alt text-text-muted"
+            color="bg-slate-100 text-slate-500"
           />
         </div>
       </div>
@@ -91,7 +91,7 @@ export default function HRDashboard() {
       {/* Pending absences */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">
+          <h2 className="section-heading mb-0">
             Ausencias pendientes
             {pendingAbsences.length > 0 && (
               <span className="ml-2 bg-primary text-white text-xs font-bold rounded-full px-2 py-0.5">
@@ -100,7 +100,7 @@ export default function HRDashboard() {
             )}
           </h2>
           <button
-            className="text-xs text-primary font-medium"
+            className="text-xs text-primary font-medium hover:text-primary-dark transition-colors"
             onClick={() => navigate('/hr/absences')}
           >
             Ver todas
@@ -111,9 +111,9 @@ export default function HRDashboard() {
             No hay solicitudes pendientes
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {pendingAbsences.slice(0, 5).map((a) => (
-              <div key={a.id} className="card px-4 py-3 flex items-center justify-between gap-3">
+              <div key={a.id} className="card px-5 py-4 flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-sm text-text-primary truncate">
                     {a.user?.nombre} {a.user?.apellidos}
@@ -124,7 +124,7 @@ export default function HRDashboard() {
                   </p>
                 </div>
                 <button
-                  className="text-xs text-primary font-medium flex-shrink-0"
+                  className="text-xs text-primary font-medium flex-shrink-0 hover:text-primary-dark transition-colors"
                   onClick={() => navigate('/hr/absences')}
                 >
                   Revisar
@@ -138,17 +138,17 @@ export default function HRDashboard() {
       {/* Recent documents */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">Documentos recientes</h2>
-          <button className="text-xs text-primary font-medium" onClick={() => navigate('/hr/documents')}>
+          <h2 className="section-heading mb-0">Documentos recientes</h2>
+          <button className="text-xs text-primary font-medium hover:text-primary-dark transition-colors" onClick={() => navigate('/hr/documents')}>
             Ver todos
           </button>
         </div>
         {recentDocs.length === 0 ? (
           <div className="card p-6 text-center text-text-muted text-sm">No hay documentos recientes</div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {recentDocs.slice(0, 4).map((d) => (
-              <div key={d.id} className="card px-4 py-3 flex items-center gap-3">
+              <div key={d.id} className="card px-5 py-4 flex items-center gap-3">
                 <FileText className="w-4 h-4 text-text-muted flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-text-primary truncate">{d.nombre_original}</p>

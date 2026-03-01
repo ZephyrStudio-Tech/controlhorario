@@ -9,13 +9,13 @@ import { useNavigate } from 'react-router-dom'
 
 function StatCard({ icon: Icon, label, value, color }) {
   return (
-    <div className="card p-4 flex items-center gap-4">
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-        <Icon className="w-5 h-5" />
+    <div className="card p-6 flex items-center gap-5">
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${color}`}>
+        <Icon className="w-6 h-6" />
       </div>
       <div>
-        <p className="text-2xl font-bold text-text-primary">{value}</p>
-        <p className="text-xs text-text-muted">{label}</p>
+        <p className="text-3xl font-bold text-text-primary leading-none mb-1.5">{value}</p>
+        <p className="text-sm text-text-muted">{label}</p>
       </div>
     </div>
   )
@@ -24,11 +24,11 @@ function StatCard({ icon: Icon, label, value, color }) {
 function QuickLink({ label, description, path, navigate }) {
   return (
     <button
-      className="card p-4 text-left w-full hover:border-primary/40 transition-colors"
+      className="card p-5 text-left w-full hover:shadow-md hover:border-primary/30 transition-all"
       onClick={() => navigate(path)}
     >
-      <p className="font-semibold text-sm text-text-primary">{label}</p>
-      <p className="text-xs text-text-muted mt-0.5">{description}</p>
+      <p className="font-semibold text-sm text-text-primary mb-1.5">{label}</p>
+      <p className="text-xs text-text-muted leading-relaxed">{description}</p>
     </button>
   )
 }
@@ -57,29 +57,29 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Panel de Administración</h1>
-        <p className="text-text-muted text-sm mt-1">
+        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Panel de Administración</h1>
+        <p className="text-text-muted text-sm mt-1.5">
           {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
         </p>
       </div>
 
       {/* Today stats */}
       <div>
-        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">Estado del día</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <h2 className="section-heading">Estado del día</h2>
+        <div className="grid grid-cols-2 gap-5">
           <StatCard icon={Clock} label="Trabajando ahora" value={stats?.activos_hoy ?? 0} color="bg-green-100 text-green-700" />
           <StatCard icon={Coffee} label="En pausa" value={stats?.en_pausa ?? 0} color="bg-amber-100 text-amber-700" />
           <StatCard icon={LogOut} label="Han salido" value={stats?.han_salido ?? 0} color="bg-blue-100 text-blue-700" />
-          <StatCard icon={UserX} label="Sin fichar" value={stats?.sin_fichar ?? 0} color="bg-surface-alt text-text-muted" />
+          <StatCard icon={UserX} label="Sin fichar" value={stats?.sin_fichar ?? 0} color="bg-slate-100 text-slate-500" />
         </div>
       </div>
 
       {/* Accesos rápidos */}
       <div>
-        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-3">Acceso rápido</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <h2 className="section-heading">Acceso rápido</h2>
+        <div className="grid grid-cols-2 gap-5">
           <QuickLink label="Usuarios" description="Gestionar trabajadores y roles" path="/admin/users" navigate={navigate} />
           <QuickLink label="Registros" description="Ver y editar jornadas" path="/admin/records" navigate={navigate} />
           <QuickLink label="Ausencias" description="Aprobar solicitudes" path="/admin/absences" navigate={navigate} />
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
       {/* Pending absences */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">
+          <h2 className="section-heading mb-0">
             Ausencias pendientes
             {pendingAbsences.length > 0 && (
               <span className="ml-2 bg-primary text-white text-xs font-bold rounded-full px-2 py-0.5">
@@ -98,16 +98,16 @@ export default function AdminDashboard() {
               </span>
             )}
           </h2>
-          <button className="text-xs text-primary font-medium" onClick={() => navigate('/admin/absences')}>
+          <button className="text-xs text-primary font-medium hover:text-primary-dark transition-colors" onClick={() => navigate('/admin/absences')}>
             Ver todas
           </button>
         </div>
         {pendingAbsences.length === 0 ? (
-          <div className="card p-5 text-center text-text-muted text-sm">No hay solicitudes pendientes</div>
+          <div className="card p-6 text-center text-text-muted text-sm">No hay solicitudes pendientes</div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {pendingAbsences.slice(0, 5).map((a) => (
-              <div key={a.id} className="card px-4 py-3 flex items-center justify-between gap-3">
+              <div key={a.id} className="card px-5 py-4 flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-sm text-text-primary truncate">
                     {a.user?.nombre} {a.user?.apellidos}
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <button
-                  className="text-xs text-primary font-medium flex-shrink-0"
+                  className="text-xs text-primary font-medium flex-shrink-0 hover:text-primary-dark transition-colors"
                   onClick={() => navigate('/admin/absences')}
                 >
                   Revisar

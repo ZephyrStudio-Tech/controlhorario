@@ -22,7 +22,7 @@ const TIPOS = [
 
 function AbsenceCard({ absence }) {
   return (
-    <div className="card p-4">
+    <div className="card p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-text-primary text-sm">
@@ -102,9 +102,12 @@ export default function WorkerAbsences() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-primary">Mis Ausencias</h1>
-        <button className="btn-primary" onClick={() => setShowModal(true)}>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Mis Ausencias</h1>
+          <p className="text-text-muted text-sm mt-1">Gestiona tus solicitudes de ausencia.</p>
+        </div>
+        <button className="btn-primary flex items-center gap-2" onClick={() => setShowModal(true)}>
           <Plus className="w-4 h-4" />
           Nueva solicitud
         </button>
