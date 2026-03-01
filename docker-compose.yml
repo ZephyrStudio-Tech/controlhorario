@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: control_horario_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-control_horario}
+      POSTGRES_USER: ${POSTGRES_USER:-horario_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-horario_user} -d ${POSTGRES_DB:-control_horario}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - horario_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: control_horario_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-horario_user}:${POSTGRES_PASSWORD:-changeme_secret}@db:5432/${POSTGRES_DB:-control_horario}
+      SECRET_KEY: ${SECRET_KEY:-supersecretkey_change_in_production}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      STORAGE_PATH: /storage/documents
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@empresa.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}
+      ADMIN_DNI: ${ADMIN_DNI:-00000000A}
+      ADMIN_NOMBRE: ${ADMIN_NOMBRE:-Administrador}
+      ADMIN_APELLIDOS: ${ADMIN_APELLIDOS:-Sistema}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+    volumes:
+      - documents_storage:/storage/documents
+    expose:
+      - "8000"
+    networks:
+      - horario_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    container_name: control_horario_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${APP_PORT:-80}:80"
+    volumes:
+      - documents_storage:/storage/documents:ro
+    networks:
+      - horario_net
+
+volumes:
+  postgres_data:
+    driver: local
+  documents_storage:
+    driver: local
+
+networks:
+  horario_net:
+    driver: bridge
