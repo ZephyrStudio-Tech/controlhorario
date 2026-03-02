@@ -1,91 +1,157 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { getAllSessions } from '../../api/sessions'
 import { getSimpleUsers } from '../../api/users'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Badge from '../../components/UI/Badge'
-import { ChevronDown, ChevronUp, MapPin, Monitor } from 'lucide-react'
+import { Monitor, MapPin, Search, ChevronDown, ChevronUp } from 'lucide-react'
 
-function PauseRow({ pause }) {
-  return (
-    <div className="flex items-center justify-between text-xs rounded-lg px-3 py-1.5 mt-1"
-      style={{ backgroundColor: '#fef3c7', color: 'var(--text-secondary)' }}>
-      <span className="capitalize">{pause.tipo}</span>
-      <span>
-        {format(new Date(pause.inicio_pausa), 'HH:mm')}
-        {pause.fin_pausa ? ` → ${format(new Date(pause.fin_pausa), 'HH:mm')}` : ' (activa)'}
-      </span>
-    </div>
-  )
-}
-
+// Componente para cada Fila de la tabla (Desplegable de Línea de Tiempo)
 function SessionRow({ s }) {
   const [expanded, setExpanded] = useState(false)
-  return (
-    <div className="card">
-      <button
-        className="w-full flex items-center justify-between px-5 py-4 text-left"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
-            {s.user?.nombre} {s.user?.apellidos}
-          </p>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            {format(new Date(s.fecha_entrada), "EEEE d MMM", { locale: es })}
-            {' · '}
-            {format(new Date(s.fecha_entrada), 'HH:mm')}
-            {s.fecha_salida ? ` → ${format(new Date(s.fecha_salida), 'HH:mm')}` : ''}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 ml-3">
-          {s.horas_netas != null && (
-            <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{s.horas_netas}h</span>
-          )}
-          <Badge value={s.estado} />
-          {expanded
-            ? <ChevronUp className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-            : <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />}
-        </div>
-      </button>
 
+  return (
+    <Fragment>
+      {/* Fila principal visible siempre */}
+      <tr className={`transition-colors hover:bg-gray-50 ${expanded ? 'bg-gray-50' : 'border-b border-stroke'}`}>
+        {/* Trabajador */}
+        <td className="py-4 px-6">
+          <div className="flex flex-col">
+            <p className="font-bold text-black text-sm">
+              {s.user?.nombre} {s.user?.apellidos}
+            </p>
+            <p className="text-xs text-body mt-0.5 capitalize">
+              {s.user?.rol === 'rrhh' ? 'RRHH' : s.user?.rol}
+            </p>
+          </div>
+        </td>
+
+        {/* Fecha */}
+        <td className="py-4 px-6 text-sm font-medium text-black capitalize">
+          {format(new Date(s.fecha_entrada), "EEEE d MMM yyyy", { locale: es })}
+        </td>
+
+        {/* Entrada */}
+        <td className="py-4 px-6">
+          <p className="text-sm font-medium text-black">{format(new Date(s.fecha_entrada), 'HH:mm')}</p>
+        </td>
+
+        {/* Salida */}
+        <td className="py-4 px-6">
+          <p className="text-sm font-medium text-black">
+            {s.fecha_salida ? format(new Date(s.fecha_salida), 'HH:mm') : '—'}
+          </p>
+        </td>
+
+        {/* Horas Netas */}
+        <td className="py-4 px-6 text-center">
+          <span className="inline-flex items-center justify-center bg-white px-2 py-1 rounded text-sm font-bold text-black border border-stroke">
+            {s.horas_netas ? `${s.horas_netas}h` : '—'}
+          </span>
+        </td>
+
+        {/* Estado */}
+        <td className="py-4 px-6">
+          <div className="flex flex-col items-start gap-1">
+            <Badge value={s.estado} />
+            {s.modificado_por && (
+              <span className="text-[10px] text-amber-600 font-medium">* Modificado admin</span>
+            )}
+          </div>
+        </td>
+
+        {/* Acciones */}
+        <td className="py-4 px-6 text-right">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="inline-flex items-center justify-center gap-1 bg-white border border-stroke text-body hover:text-primary px-3 py-1.5 rounded-md text-xs font-semibold transition-colors w-full sm:w-auto"
+          >
+            {expanded ? 'Ocultar' : 'Detalles'}
+            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </td>
+      </tr>
+
+      {/* Fila Desplegable con la Línea de Tiempo (Timeline) */}
       {expanded && (
-        <div className="px-5 pb-5 pt-4 space-y-2" style={{ borderTop: '1px solid var(--surface-border)' }}>
-          <div className="grid grid-cols-3 gap-3 text-xs">
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Horas netas</span>
-              <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{s.horas_netas ?? '—'}h</p>
+        <tr className="bg-slate-50 border-b border-stroke">
+          <td colSpan="7" className="py-6 px-8">
+            <div className="ml-2 pl-6 border-l-2 border-stroke space-y-6">
+              
+              {/* Evento 1: Entrada */}
+              <div className="relative">
+                <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-success ring-4 ring-success-light"></div>
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-sm font-bold text-black flex items-center gap-2">
+                    Fichaje de Entrada
+                    <span className="text-xs font-medium text-body bg-white border border-stroke px-2 py-0.5 rounded">
+                      {format(new Date(s.fecha_entrada), 'HH:mm:ss')}
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-body">
+                    {s.ip_entrada ? (
+                      <span className="flex items-center gap-1"><Monitor className="w-3.5 h-3.5" /> IP: {s.ip_entrada}</span>
+                    ) : (
+                      <span className="text-gray-400 italic">IP no registrada</span>
+                    )}
+                    
+                    {s.lat_entrada && s.lon_entrada && (
+                      <a 
+                        href={`https://www.google.com/maps?q=${s.lat_entrada},${s.lon_entrada}`} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="flex items-center gap-1 text-primary hover:underline font-medium"
+                      >
+                        <MapPin className="w-3.5 h-3.5" /> Ver en mapa ({Number(s.lat_entrada).toFixed(4)}, {Number(s.lon_entrada).toFixed(4)})
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Eventos Intermedios: Pausas */}
+              {s.pauses?.map((p) => (
+                <div key={p.id} className="relative">
+                  <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-warning ring-4 ring-warning-light"></div>
+                  <div className="flex flex-col gap-1.5">
+                    <p className="text-sm font-bold text-black flex items-center gap-2 capitalize">
+                      Pausa: {p.tipo.replace(/_/g, ' ')}
+                      <span className="text-xs font-medium text-body bg-white border border-stroke px-2 py-0.5 rounded">
+                        {format(new Date(p.inicio_pausa), 'HH:mm:ss')} → {p.fin_pausa ? format(new Date(p.fin_pausa), 'HH:mm:ss') : 'En curso'}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+              {/* Evento Final: Salida */}
+              {s.fecha_salida ? (
+                <div className="relative">
+                  <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-danger ring-4 ring-danger-light"></div>
+                  <div className="flex flex-col gap-1.5">
+                    <p className="text-sm font-bold text-black flex items-center gap-2">
+                      Fichaje de Salida
+                      <span className="text-xs font-medium text-body bg-white border border-stroke px-2 py-0.5 rounded">
+                        {format(new Date(s.fecha_salida), 'HH:mm:ss')}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-body ring-4 ring-gray-200"></div>
+                  <p className="text-sm font-medium text-body italic">Jornada abierta (Sin salida)</p>
+                </div>
+              )}
+
             </div>
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Horas extra</span>
-              <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{s.horas_extra ?? '—'}h</p>
-            </div>
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Pausas</span>
-              <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{s.pauses?.length ?? 0}</p>
-            </div>
-          </div>
-          {s.pauses?.length > 0 && (
-            <div>
-              <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Detalle de pausas</p>
-              {s.pauses.map((p) => <PauseRow key={p.id} pause={p} />)}
-            </div>
-          )}
-          <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-            <Monitor className="w-3 h-3" />
-            IP entrada: {s.ip_entrada || '—'}
-          </div>
-          {s.lat_entrada && (
-            <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-              <MapPin className="w-3 h-3" />
-              {Number(s.lat_entrada).toFixed(5)}, {Number(s.lon_entrada).toFixed(5)}
-            </div>
-          )}
-        </div>
+          </td>
+        </tr>
       )}
-    </div>
+    </Fragment>
   )
 }
+
 
 export default function HRRecords() {
   const [sessions, setSessions] = useState([])
@@ -100,6 +166,7 @@ export default function HRRecords() {
     if (filters.start_date) params.start_date = filters.start_date
     if (filters.end_date) params.end_date = filters.end_date
     if (filters.estado) params.estado = filters.estado
+    
     getAllSessions(params)
       .then((res) => setSessions(res.data))
       .finally(() => setLoading(false))
@@ -111,57 +178,96 @@ export default function HRRecords() {
   }, [])
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-8">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Registros de jornada</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Consulta los fichajes de todos los trabajadores.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-text-primary">Registros de Jornada</h1>
+        <p className="text-sm mt-1 text-text-muted">
+          Audita y consulta los fichajes de los trabajadores (Modo Solo Lectura).
+        </p>
       </div>
 
-      <div className="card p-5 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label">Trabajador</label>
+      {/* Tarjeta de Filtros */}
+      <div className="rounded-sm border border-stroke bg-white shadow-default p-6">
+        <h3 className="font-semibold text-black mb-4 text-sm uppercase tracking-wider">Filtros de Búsqueda</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div className="lg:col-span-1">
+            <label className="mb-2.5 block text-black font-medium text-sm">Trabajador</label>
             <select className="input" value={filters.user_id} onChange={(e) => setFilters({ ...filters, user_id: e.target.value })}>
-              <option value="">Todos</option>
+              <option value="">Todos los usuarios</option>
               {users.map((u) => <option key={u.id} value={u.id}>{u.nombre} {u.apellidos}</option>)}
             </select>
           </div>
-          <div>
-            <label className="label">Estado</label>
+          
+          <div className="lg:col-span-1">
+            <label className="mb-2.5 block text-black font-medium text-sm">Estado</label>
             <select className="input" value={filters.estado} onChange={(e) => setFilters({ ...filters, estado: e.target.value })}>
-              <option value="">Todos</option>
+              <option value="">Todos los estados</option>
               <option value="abierta">Abierta</option>
               <option value="en_pausa">En pausa</option>
               <option value="cerrada">Cerrada</option>
               <option value="incompleta">Incompleta</option>
             </select>
           </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label">Desde</label>
+
+          <div className="lg:col-span-1">
+            <label className="mb-2.5 block text-black font-medium text-sm">Desde</label>
             <input type="date" className="input" value={filters.start_date} onChange={(e) => setFilters({ ...filters, start_date: e.target.value })} />
           </div>
-          <div>
-            <label className="label">Hasta</label>
+          
+          <div className="lg:col-span-1">
+            <label className="mb-2.5 block text-black font-medium text-sm">Hasta</label>
             <input type="date" className="input" value={filters.end_date} onChange={(e) => setFilters({ ...filters, end_date: e.target.value })} />
           </div>
+
+          <div className="lg:col-span-1">
+            <button className="btn-primary w-full py-3" onClick={load}>
+              <Search className="w-5 h-5" />
+              Filtrar
+            </button>
+          </div>
         </div>
-        <button className="btn-primary w-full" onClick={load}>Buscar</button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} />
+      {/* Tabla de Datos */}
+      <div className="rounded-sm border border-stroke bg-white shadow-default overflow-hidden">
+        <div className="border-b border-stroke py-4 px-6">
+          <h3 className="font-semibold text-black text-lg">
+            Listado de Sesiones <span className="text-sm font-normal text-body ml-2">({sessions.length} encontrados)</span>
+          </h3>
         </div>
-      ) : sessions.length === 0 ? (
-        <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>No hay registros para los filtros seleccionados</div>
-      ) : (
-        <div className="space-y-3">
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{sessions.length} registros encontrados</p>
-          {sessions.map((s) => <SessionRow key={s.id} s={s} />)}
+
+        <div className="max-w-full overflow-x-auto">
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : sessions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-body">
+              <p>No se encontraron registros con estos filtros.</p>
+            </div>
+          ) : (
+            <table className="w-full table-auto">
+              <thead>
+                <tr className="bg-whiten text-left">
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[200px]">Trabajador</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[150px]">Día</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[120px]">Entrada</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[120px]">Salida</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[100px] text-center">Netas</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[120px]">Estado</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider text-right">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sessions.map((s) => (
+                  <SessionRow key={s.id} s={s} />
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
