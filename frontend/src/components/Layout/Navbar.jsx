@@ -26,7 +26,7 @@ const adminLinks = [
   { to: '/admin/absences', label: 'Ausencias', icon: Calendar },
   { to: '/admin/documents', label: 'Documentos', icon: FileText },
   { to: '/admin/reports', label: 'Informes', icon: FileText },
-  { to: '/admin/logs', label: 'Auditoría', icon: Clipboard },
+  { to: '/admin/logs', label: 'Auditoría', icon:ClipboardList },
 ]
 
 export default function Navbar({ sidebarOpen, setSidebarOpen }) {
