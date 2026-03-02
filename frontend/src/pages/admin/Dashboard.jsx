@@ -68,7 +68,7 @@ export default function AdminDashboard() {
       {/* Today stats */}
       <div>
         <h2 className="section-heading">Estado del día</h2>
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={Clock} label="Trabajando ahora" value={stats?.activos_hoy ?? 0} color="bg-green-100 text-green-700" />
           <StatCard icon={Coffee} label="En pausa" value={stats?.en_pausa ?? 0} color="bg-amber-100 text-amber-700" />
           <StatCard icon={LogOut} label="Han salido" value={stats?.han_salido ?? 0} color="bg-blue-100 text-blue-700" />
