@@ -15,6 +15,7 @@ from app.services.session_service import (
     get_client_ip,
     compute_session_hours,
 )
+from app.services.log_service import log_activity  # <-- NUESTRO ESPÍA
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -26,7 +27,6 @@ def clock_in(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # mark_incomplete_sessions eliminado de aquí — ahora lo gestiona el scheduler en main.py
     active = db.query(WorkSession).filter(
         WorkSession.user_id == current_user.id,
         WorkSession.estado.in_([SessionEstadoEnum.abierta, SessionEstadoEnum.en_pausa]),
@@ -36,11 +36,13 @@ def clock_in(
             status_code=status.HTTP_409_CONFLICT,
             detail={"error": True, "code": "SESSION_ALREADY_OPEN", "message": "Ya tienes una jornada abierta. Ficha la salida primero."},
         )
+    
+    ip = get_client_ip(request)
     session = WorkSession(
         user_id=current_user.id,
         fecha_entrada=datetime.now(timezone.utc),
         estado=SessionEstadoEnum.abierta,
-        ip_entrada=get_client_ip(request),
+        ip_entrada=ip,
         lat_entrada=payload.lat,
         lon_entrada=payload.lon,
         geolocalizacion_denegada_entrada=payload.geolocalizacion_denegada,
@@ -48,6 +50,10 @@ def clock_in(
     db.add(session)
     db.commit()
     db.refresh(session)
+    
+    # --- REGISTRO DE AUDITORÍA ---
+    log_activity(db, "CLOCK_IN", f"Inicio de jornada", current_user.id, ip)
+    
     return session
 
 
@@ -67,18 +73,21 @@ def clock_out(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": True, "code": "NO_OPEN_SESSION", "message": "No tienes ninguna jornada abierta"},
         )
-    # Close any open pause first
+        
+    ip = get_client_ip(request)
+    
     open_pause = db.query(SessionPause).filter(
         SessionPause.session_id == session.id,
         SessionPause.fin_pausa == None,
     ).first()
+    
     if open_pause:
         open_pause.fin_pausa = datetime.now(timezone.utc)
-        open_pause.ip_fin = get_client_ip(request)
+        open_pause.ip_fin = ip
 
     now = datetime.now(timezone.utc)
     session.fecha_salida = now
-    session.ip_salida = get_client_ip(request)
+    session.ip_salida = ip
     session.lat_salida = payload.lat
     session.lon_salida = payload.lon
     session.geolocalizacion_denegada_salida = payload.geolocalizacion_denegada
@@ -90,6 +99,10 @@ def clock_out(
 
     db.commit()
     db.refresh(session)
+    
+    # --- REGISTRO DE AUDITORÍA ---
+    log_activity(db, "CLOCK_OUT", f"Fin de jornada ({horas_netas}h netas registradas)", current_user.id, ip)
+    
     return session
 
 
@@ -109,11 +122,12 @@ def start_pause(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": True, "code": "NO_OPEN_SESSION", "message": "No tienes ninguna jornada abierta"},
         )
+    ip = get_client_ip(request)
     pause = SessionPause(
         session_id=session.id,
         tipo=payload.tipo,
         inicio_pausa=datetime.now(timezone.utc),
-        ip_inicio=get_client_ip(request),
+        ip_inicio=ip,
         lat_inicio=payload.lat,
         lon_inicio=payload.lon,
     )
@@ -121,6 +135,10 @@ def start_pause(
     db.add(pause)
     db.commit()
     db.refresh(pause)
+    
+    # --- REGISTRO DE AUDITORÍA ---
+    log_activity(db, "PAUSE_START", f"Inicia pausa: {payload.tipo.name}", current_user.id, ip)
+    
     return pause
 
 
@@ -149,13 +167,18 @@ def end_pause(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": True, "code": "NO_OPEN_PAUSE", "message": "No hay pausa abierta"},
         )
+    ip = get_client_ip(request)
     pause.fin_pausa = datetime.now(timezone.utc)
-    pause.ip_fin = get_client_ip(request)
+    pause.ip_fin = ip
     pause.lat_fin = payload.lat
     pause.lon_fin = payload.lon
     session.estado = SessionEstadoEnum.abierta
     db.commit()
     db.refresh(pause)
+    
+    # --- REGISTRO DE AUDITORÍA ---
+    log_activity(db, "PAUSE_END", f"Finaliza pausa: {pause.tipo.name}", current_user.id, ip)
+    
     return pause
 
 
@@ -208,6 +231,7 @@ def get_all_sessions(
 def admin_update_session(
     session_id: uuid.UUID,
     payload: WorkSessionAdminUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
@@ -219,7 +243,6 @@ def admin_update_session(
         )
     update_data = payload.model_dump(exclude_unset=True)
 
-    # Detectar si se están modificando fechas para decidir si recalcular
     recalculate = "fecha_entrada" in update_data or "fecha_salida" in update_data
 
     for key, value in update_data.items():
@@ -227,7 +250,6 @@ def admin_update_session(
     session.modificado_por = current_user.id
     session.fecha_modificacion = datetime.now(timezone.utc)
 
-    # Recalcular solo si cambiaron fechas y la sesión tiene entrada y salida
     if recalculate and session.fecha_salida and session.fecha_entrada:
         worker = db.query(User).filter(User.id == session.user_id).first()
         jornada = float(worker.jornada_horas_diarias) if worker else 8.0
@@ -237,6 +259,12 @@ def admin_update_session(
 
     db.commit()
     db.refresh(session)
+    
+    # --- REGISTRO DE AUDITORÍA ---
+    worker_afectado = db.query(User).filter(User.id == session.user_id).first()
+    afectado_name = f"{worker_afectado.nombre} {worker_afectado.apellidos}" if worker_afectado else "Usuario"
+    log_activity(db, "ADMIN_EDIT_SESSION", f"Editó la jornada de {afectado_name}", current_user.id, get_client_ip(request))
+    
     return session
 
 
@@ -245,7 +273,6 @@ def today_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_or_rrhh),
 ):
-    """Dashboard summary: how many workers clocked in, paused, out, absent today."""
     import pytz
     madrid_tz = pytz.timezone("Europe/Madrid")
     now_madrid = datetime.now(madrid_tz)
@@ -283,10 +310,10 @@ def export_report(
     start_date: date = Query(...),
     end_date: date = Query(...),
     user_id: Optional[uuid.UUID] = Query(None),
+    request: Request = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_or_rrhh),
 ):
-    """Export attendance report as CSV."""
     import pytz
     madrid_tz = pytz.timezone("Europe/Madrid")
 
@@ -301,7 +328,6 @@ def export_report(
         q = q.filter(WorkSession.user_id == user_id)
     sessions = q.order_by(WorkSession.fecha_entrada).all()
 
-    # Cargar todos los usuarios necesarios de una sola query (evita N+1)
     user_ids = list({s.user_id for s in sessions})
     workers_map = {
         u.id: u for u in db.query(User).filter(User.id.in_(user_ids)).all()
@@ -318,7 +344,6 @@ def export_report(
     ])
     for s in sessions:
         worker = workers_map.get(s.user_id)
-        # Convertir timestamps a Europe/Madrid para el CSV
         entrada_madrid = s.fecha_entrada.astimezone(madrid_tz) if s.fecha_entrada else None
         salida_madrid = s.fecha_salida.astimezone(madrid_tz) if s.fecha_salida else None
         writer.writerow([
@@ -334,6 +359,11 @@ def export_report(
 
     output.seek(0)
     filename = f"informe_{start_date}_{end_date}.csv"
+    
+    # --- REGISTRO DE AUDITORÍA ---
+    ip = get_client_ip(request) if request else None
+    log_activity(db, "REPORT_EXPORT", f"Exportó un informe CSV del {start_date} al {end_date}", current_user.id, ip)
+    
     return StreamingResponse(
         iter([output.getvalue().encode("utf-8-sig")]),
         media_type="text/csv",

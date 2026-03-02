@@ -11,20 +11,27 @@ from app.services.auth_service import (
     decode_token,
     get_current_user,
 )
+from app.services.session_service import get_client_ip
+from app.services.log_service import log_activity  # <-- NUESTRO ESPÍA
 import uuid
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/login/email", response_model=TokenResponse)
-def login_email(payload: LoginEmail, db: Session = Depends(get_db)):
+def login_email(payload: LoginEmail, request: Request, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email, User.activo == True).first()
     if not user or not user.password_hash or not verify_password(payload.password, user.password_hash):
+        # Opcional: Podrías registrar intentos fallidos aquí si quieres, pero por ahora solo el éxito.
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": True, "code": "INVALID_CREDENTIALS", "message": "Credenciales incorrectas"},
         )
     token_data = {"sub": str(user.id), "rol": user.rol}
+    
+    # --- REGISTRO DE AUDITORÍA ---
+    log_activity(db, "LOGIN_EMAIL", "Inicio de sesión vía Email", user.id, get_client_ip(request))
+    
     return TokenResponse(
         access_token=create_access_token(token_data),
         refresh_token=create_refresh_token(token_data),
@@ -32,7 +39,7 @@ def login_email(payload: LoginEmail, db: Session = Depends(get_db)):
 
 
 @router.post("/login/dni", response_model=TokenResponse)
-def login_dni(payload: LoginDNI, db: Session = Depends(get_db)):
+def login_dni(payload: LoginDNI, request: Request, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.dni == payload.dni.upper(), User.activo == True).first()
     if not user or not user.pin_hash or not verify_password(payload.dni.upper(), user.pin_hash):
         raise HTTPException(
@@ -40,6 +47,10 @@ def login_dni(payload: LoginDNI, db: Session = Depends(get_db)):
             detail={"error": True, "code": "INVALID_CREDENTIALS", "message": "DNI/PIN incorrecto"},
         )
     token_data = {"sub": str(user.id), "rol": user.rol}
+    
+    # --- REGISTRO DE AUDITORÍA ---
+    log_activity(db, "LOGIN_DNI", "Inicio de sesión rápido con DNI", user.id, get_client_ip(request))
+    
     return TokenResponse(
         access_token=create_access_token(token_data),
         refresh_token=create_refresh_token(token_data),
