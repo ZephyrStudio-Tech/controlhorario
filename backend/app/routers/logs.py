@@ -1,4 +1,15 @@
-from app.services.log_service import log_activity # Asegúrate de tener el import
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
+from typing import List
+from app.database import get_db
+from app.models.activity_log import ActivityLog
+from app.schemas.activity_log import ActivityLogOut # Asegúrate de que el schema se llame así
+from app.services.auth_service import require_admin
+from app.models.user import User
+from app.services.log_service import log_activity
+
+# ESTA ES LA LÍNEA QUE TE FALTA:
+router = APIRouter(prefix="/logs", tags=["logs"])
 
 @router.get("/", response_model=List[ActivityLogOut])
 def get_activity_logs(
@@ -6,7 +17,7 @@ def get_activity_logs(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
-    # FORZAMOS UN LOG AQUÍ MISMO
+    # Log de depuración para ver si el servicio responde
     log_activity(db, "AUDIT_VIEW", "El administrador visualiza los logs", current_user.id)
     
     return db.query(ActivityLog).order_by(ActivityLog.created_at.desc()).limit(limit).all()
