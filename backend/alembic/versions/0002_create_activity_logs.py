@@ -14,7 +14,6 @@ branch_labels = None
 depends_on = None
 
 def upgrade() -> None:
-    # Creamos la tabla de los logs de auditoría
     op.create_table(
         "activity_logs",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
@@ -22,12 +21,7 @@ def upgrade() -> None:
         sa.Column("accion", sa.String(100), nullable=False),
         sa.Column("detalles", sa.Text(), nullable=True),
         sa.Column("ip_address", sa.String(50), nullable=True),
-        sa.Column(
-            "created_at",
-            sa.TIMESTAMP(timezone=True),
-            nullable=False,
-            server_default=sa.text("now()"),
-        ),
+        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("now()")),
     )
 
 def downgrade() -> None:
