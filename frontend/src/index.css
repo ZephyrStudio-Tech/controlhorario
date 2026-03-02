@@ -56,6 +56,12 @@
   --color-success:        var(--success);
   --color-warning:        var(--warning);
   --color-danger:         var(--danger);
+  
+  /* --- AÑADE ESTOS 3 COLORES TAILADMIN --- */
+  --color-boxdark:        #24303F;
+  --color-whiten:         #F1F5F9;
+  --color-stroke:         #E2E8F0;
+
   --font-sans: 'DM Sans', sans-serif;
   --font-mono: 'DM Mono', monospace;
 }
