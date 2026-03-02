@@ -7,8 +7,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.database import engine, SessionLocal
-from app.models import user, work_session, session_pause, absence, document  # noqa: F401
-from app.routers import auth, users, sessions, absences, documents
+from app.models import user, work_session, session_pause, absence, document, activity_log  # noqa: F401
+from app.routers import auth, users, sessions, absences, documents, logs
 from app.services.report_service import router as reports_router
 from app.config import get_settings
 
@@ -105,6 +105,7 @@ app.include_router(sessions.router, prefix="/api")
 app.include_router(absences.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
+app.include_router(logs.router, prefix="/api")
 
 
 @app.get("/api/health")
