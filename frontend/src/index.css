@@ -106,8 +106,8 @@
 
   /* El arreglo clave para los botones del Dashboard */
   button.card, a.card {
-    @apply flex flex-col items-start w-full text-left hover:shadow-[var(--shadow-md)] hover:border-[#c5c8d0] active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent p-5 !important;
-  }
+  @apply flex flex-col items-start w-full text-left hover:shadow-[var(--shadow-md)] hover:border-[#c5c8d0] active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent !p-5;
+}
 
   /* ─── Inputs ─── */
   .input {
