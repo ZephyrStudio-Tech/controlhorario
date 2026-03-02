@@ -79,7 +79,7 @@ export default function AdminDashboard() {
       {/* Accesos rápidos */}
       <div>
         <h2 className="section-heading">Acceso rápido</h2>
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <QuickLink label="Usuarios" description="Gestionar trabajadores y roles" path="/admin/users" navigate={navigate} />
           <QuickLink label="Registros" description="Ver y editar jornadas" path="/admin/records" navigate={navigate} />
           <QuickLink label="Ausencias" description="Aprobar solicitudes" path="/admin/absences" navigate={navigate} />
