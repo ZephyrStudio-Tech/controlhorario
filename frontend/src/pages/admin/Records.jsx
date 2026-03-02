@@ -5,97 +5,17 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Badge from '../../components/UI/Badge'
 import Modal from '../../components/UI/Modal'
-import { ChevronDown, ChevronUp, MapPin, Monitor, Edit2, AlertCircle } from 'lucide-react'
-
-function PauseRow({ pause }) {
-  return (
-    <div className="flex items-center justify-between text-xs text-text-secondary bg-amber-50 rounded-lg px-3 py-1.5 mt-1">
-      <span className="capitalize">{pause.tipo}</span>
-      <span>
-        {format(new Date(pause.inicio_pausa), 'HH:mm')}
-        {pause.fin_pausa ? ` → ${format(new Date(pause.fin_pausa), 'HH:mm')}` : ' (activa)'}
-      </span>
-    </div>
-  )
-}
-
-function SessionRow({ s, onEdit }) {
-  const [expanded, setExpanded] = useState(false)
-  return (
-    <div className="card">
-      <button
-        className="w-full flex items-center justify-between px-5 py-4 text-left"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-text-primary text-sm truncate">
-            {s.user?.nombre} {s.user?.apellidos}
-          </p>
-          <p className="text-xs text-text-muted mt-0.5">
-            {format(new Date(s.fecha_entrada), "EEEE d MMM", { locale: es })}
-            {' · '}{format(new Date(s.fecha_entrada), 'HH:mm')}
-            {s.fecha_salida ? ` → ${format(new Date(s.fecha_salida), 'HH:mm')}` : ''}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 ml-3">
-          {s.horas_netas != null && (
-            <span className="text-sm font-semibold text-text-primary">{s.horas_netas}h</span>
-          )}
-          <Badge value={s.estado} />
-          {expanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-        </div>
-      </button>
-
-      {expanded && (
-          <div className="px-5 pb-5 border-t border-surface-border pt-4 space-y-2">
-          <div className="grid grid-cols-3 gap-3 text-xs">
-            <div>
-              <span className="text-text-muted">Horas netas</span>
-              <p className="font-semibold text-text-primary">{s.horas_netas ?? '—'}h</p>
-            </div>
-            <div>
-              <span className="text-text-muted">Horas extra</span>
-              <p className="font-semibold text-text-primary">{s.horas_extra ?? '—'}h</p>
-            </div>
-            <div>
-              <span className="text-text-muted">Pausas</span>
-              <p className="font-semibold text-text-primary">{s.pauses?.length ?? 0}</p>
-            </div>
-          </div>
-          {s.pauses?.length > 0 && s.pauses.map((p) => <PauseRow key={p.id} pause={p} />)}
-          <div className="flex items-center gap-1 text-xs text-text-muted">
-            <Monitor className="w-3 h-3" />
-            IP: {s.ip_entrada || '—'}
-          </div>
-          {s.lat_entrada && (
-            <div className="flex items-center gap-1 text-xs text-text-muted">
-              <MapPin className="w-3 h-3" />
-              {Number(s.lat_entrada).toFixed(5)}, {Number(s.lon_entrada).toFixed(5)}
-            </div>
-          )}
-          {s.modificado_por && (
-            <p className="text-xs text-amber-600">Modificado por un administrador</p>
-          )}
-          <div className="pt-1">
-            <button
-              className="btn-secondary text-xs flex items-center gap-1.5"
-              onClick={() => onEdit(s)}
-            >
-              <Edit2 className="w-3 h-3" />
-              Editar registro
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+import { Monitor, MapPin, Edit2, AlertCircle, Search } from 'lucide-react'
 
 export default function AdminRecords() {
   const [sessions, setSessions] = useState([])
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  // Estado para los filtros
   const [filters, setFilters] = useState({ user_id: '', start_date: '', end_date: '', estado: '' })
+  
+  // Estado para la edición
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [editError, setEditError] = useState('')
@@ -108,6 +28,7 @@ export default function AdminRecords() {
     if (filters.start_date) params.start_date = filters.start_date
     if (filters.end_date) params.end_date = filters.end_date
     if (filters.estado) params.estado = filters.estado
+    
     getAllSessions(params)
       .then((res) => setSessions(res.data))
       .finally(() => setLoading(false))
@@ -148,66 +69,171 @@ export default function AdminRecords() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-8">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Registros de jornada</h1>
-        <p className="text-text-muted text-sm mt-1">Consulta y edita los fichajes de todos los trabajadores.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-text-primary">Registros de Jornada</h1>
+        <p className="text-sm mt-1 text-text-muted">
+          Consulta y edita los fichajes de todos los trabajadores de la empresa.
+        </p>
       </div>
 
-      {/* Filters */}
-      <div className="card p-5 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label">Trabajador</label>
+      {/* Tarjeta de Filtros (Estilo TailAdmin) */}
+      <div className="rounded-sm border border-stroke bg-white shadow-default p-6">
+        <h3 className="font-semibold text-black mb-4 text-sm uppercase tracking-wider">Filtros de Búsqueda</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div className="lg:col-span-1">
+            <label className="mb-2.5 block text-black font-medium text-sm">Trabajador</label>
             <select className="input" value={filters.user_id} onChange={(e) => setFilters({ ...filters, user_id: e.target.value })}>
-              <option value="">Todos</option>
+              <option value="">Todos los usuarios</option>
               {users.map((u) => <option key={u.id} value={u.id}>{u.nombre} {u.apellidos}</option>)}
             </select>
           </div>
-          <div>
-            <label className="label">Estado</label>
+          
+          <div className="lg:col-span-1">
+            <label className="mb-2.5 block text-black font-medium text-sm">Estado</label>
             <select className="input" value={filters.estado} onChange={(e) => setFilters({ ...filters, estado: e.target.value })}>
-              <option value="">Todos</option>
+              <option value="">Todos los estados</option>
               <option value="abierta">Abierta</option>
               <option value="en_pausa">En pausa</option>
               <option value="cerrada">Cerrada</option>
               <option value="incompleta">Incompleta</option>
             </select>
           </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label">Desde</label>
+
+          <div className="lg:col-span-1">
+            <label className="mb-2.5 block text-black font-medium text-sm">Desde</label>
             <input type="date" className="input" value={filters.start_date} onChange={(e) => setFilters({ ...filters, start_date: e.target.value })} />
           </div>
-          <div>
-            <label className="label">Hasta</label>
+          
+          <div className="lg:col-span-1">
+            <label className="mb-2.5 block text-black font-medium text-sm">Hasta</label>
             <input type="date" className="input" value={filters.end_date} onChange={(e) => setFilters({ ...filters, end_date: e.target.value })} />
           </div>
+
+          <div className="lg:col-span-1">
+            <button className="btn-primary w-full py-3" onClick={load}>
+              <Search className="w-5 h-5" />
+              Filtrar
+            </button>
+          </div>
         </div>
-        <button className="btn-primary w-full" onClick={load}>Buscar</button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      {/* Tabla de Datos (Estilo TailAdmin) */}
+      <div className="rounded-sm border border-stroke bg-white shadow-default overflow-hidden">
+        
+        {/* Cabecera de la tabla */}
+        <div className="border-b border-stroke py-4 px-6">
+          <h3 className="font-semibold text-black text-lg">
+            Listado de Sesiones <span className="text-sm font-normal text-body ml-2">({sessions.length} encontrados)</span>
+          </h3>
         </div>
-      ) : sessions.length === 0 ? (
-        <div className="text-center py-12 text-text-muted">No hay registros</div>
-      ) : (
-        <div className="space-y-3">
-          <p className="text-xs text-text-muted">{sessions.length} registros</p>
-          {sessions.map((s) => <SessionRow key={s.id} s={s} onEdit={openEdit} />)}
-        </div>
-      )}
 
+        {/* Contenedor desplazable horizontalmente (para móviles) */}
+        <div className="max-w-full overflow-x-auto">
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : sessions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-body">
+              <p>No se encontraron registros con estos filtros.</p>
+            </div>
+          ) : (
+            <table className="w-full table-auto">
+              <thead>
+                <tr className="bg-gray-2 text-left bg-whiten">
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[200px]">Trabajador</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[150px]">Fecha y Día</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[120px]">Entrada</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[120px]">Salida</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[100px] text-center">Netas</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider min-w-[120px]">Estado</th>
+                  <th className="py-4 px-6 font-medium text-black text-sm uppercase tracking-wider text-right">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sessions.map((s, index) => (
+                  <tr key={s.id} className={`${index !== sessions.length - 1 ? 'border-b border-stroke' : ''} hover:bg-gray-50 transition-colors`}>
+                    
+                    {/* Trabajador */}
+                    <td className="py-4 px-6">
+                      <div className="flex flex-col">
+                        <p className="font-bold text-black text-sm">{s.user?.nombre} {s.user?.apellidos}</p>
+                        <p className="text-xs text-body mt-0.5 capitalize">{s.user?.rol === 'rrhh' ? 'RRHH' : s.user?.rol}</p>
+                      </div>
+                    </td>
+
+                    {/* Fecha */}
+                    <td className="py-4 px-6 text-sm font-medium text-black capitalize">
+                      {format(new Date(s.fecha_entrada), "EEEE d MMM yyyy", { locale: es })}
+                    </td>
+
+                    {/* Entrada */}
+                    <td className="py-4 px-6">
+                      <p className="text-sm font-medium text-black">{format(new Date(s.fecha_entrada), 'HH:mm')}</p>
+                      {s.ip_entrada && (
+                        <p className="text-[10px] text-body mt-1 flex items-center gap-1" title="Dirección IP y GPS">
+                          <Monitor className="w-3 h-3" /> {s.ip_entrada}
+                        </p>
+                      )}
+                    </td>
+
+                    {/* Salida */}
+                    <td className="py-4 px-6">
+                      <p className="text-sm font-medium text-black">
+                        {s.fecha_salida ? format(new Date(s.fecha_salida), 'HH:mm') : '—'}
+                      </p>
+                    </td>
+
+                    {/* Horas Netas */}
+                    <td className="py-4 px-6 text-center">
+                      <span className="inline-flex items-center justify-center bg-gray-100 px-2 py-1 rounded text-sm font-bold text-black border border-stroke">
+                        {s.horas_netas ? `${s.horas_netas}h` : '—'}
+                      </span>
+                    </td>
+
+                    {/* Estado */}
+                    <td className="py-4 px-6">
+                      <div className="flex flex-col items-start gap-1">
+                        <Badge value={s.estado} />
+                        {s.modificado_por && (
+                          <span className="text-[10px] text-amber-600 font-medium">* Modificado admin</span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Acción */}
+                    <td className="py-4 px-6 text-right">
+                      <button
+                        onClick={() => openEdit(s)}
+                        className="inline-flex items-center justify-center gap-1 bg-primary/10 text-primary hover:bg-primary hover:text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-colors"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        Editar
+                      </button>
+                    </td>
+
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* Modal de Edición (Mantenemos tu lógica, pero con clases Tailwind limpias) */}
       {editing && (
         <Modal title="Editar registro" onClose={() => setEditing(null)}>
           <form onSubmit={handleEditSubmit} className="space-y-4">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-800">
-              Editando el registro de <span className="font-semibold">{editing.user?.nombre} {editing.user?.apellidos}</span>.
-              Los cambios quedan registrados con tu usuario.
+            <div className="bg-warning/10 border border-warning/20 rounded-sm px-4 py-3 text-sm text-warning-fg mb-4">
+              <span className="font-bold flex items-center gap-2 mb-1">
+                <AlertCircle className="w-4 h-4" /> Editando Registro
+              </span>
+              Se va a modificar la jornada de <b>{editing.user?.nombre} {editing.user?.apellidos}</b>. Esta acción quedará registrada en el sistema.
             </div>
+
             <div>
               <label className="label">Fecha y hora de entrada</label>
               <input
@@ -218,6 +244,7 @@ export default function AdminRecords() {
                 required
               />
             </div>
+            
             <div>
               <label className="label">Fecha y hora de salida (opcional)</label>
               <input
@@ -227,28 +254,30 @@ export default function AdminRecords() {
                 onChange={(e) => setEditForm({ ...editForm, fecha_salida: e.target.value })}
               />
             </div>
+            
             <div>
-              <label className="label">Estado</label>
+              <label className="label">Estado de la jornada</label>
               <select className="input" value={editForm.estado} onChange={(e) => setEditForm({ ...editForm, estado: e.target.value })}>
-                <option value="abierta">Abierta</option>
+                <option value="abierta">Abierta (Trabajando)</option>
                 <option value="en_pausa">En pausa</option>
-                <option value="cerrada">Cerrada</option>
-                <option value="incompleta">Incompleta</option>
+                <option value="cerrada">Cerrada (Finalizada)</option>
+                <option value="incompleta">Incompleta (Falta salida)</option>
               </select>
             </div>
+
             {editError && (
-              <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-xs text-red-700">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-sm px-4 py-3 text-sm text-danger">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
                 {editError}
               </div>
             )}
-            <div className="flex gap-3 pt-1">
-              <button type="button" className="btn-secondary flex-1" onClick={() => setEditing(null)}>Cancelar</button>
-              <button type="submit" className="btn-primary flex-1" disabled={editSubmitting}>
-                {editSubmitting
-                  ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  : 'Guardar cambios'
-                }
+
+            <div className="flex gap-3 pt-4 border-t border-stroke mt-6">
+              <button type="button" className="btn-secondary w-full" onClick={() => setEditing(null)}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn-primary w-full" disabled={editSubmitting}>
+                {editSubmitting ? 'Guardando...' : 'Guardar cambios'}
               </button>
             </div>
           </form>
