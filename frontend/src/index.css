@@ -5,8 +5,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── Variables ─────────────────────────────────────────────── */
-
 :root {
   --primary:        #4676cd;
   --primary-light:  #5887d1;
@@ -41,35 +39,31 @@
   --radius:         8px;
   --radius-sm:      5px;
   --radius-lg:      12px;
-  --shadow-sm:      0 0 5px rgba(0,0,0,0.04);
-  --shadow-md:      0 2px 8px rgba(0,0,0,0.08);
-  --shadow-lg:      0 4px 20px rgba(0,0,0,0.12);
+  --shadow-sm:      0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:      0 2px 8px rgba(0,0,0,0.09);
+  --shadow-lg:      0 4px 20px rgba(0,0,0,0.13);
 }
 
-/* Tailwind 4 theme — permite usar bg-primary, text-primary, etc. como clases Tailwind */
 @theme {
-  --color-primary:          #4676cd;
-  --color-primary-light:    #5887d1;
-  --color-primary-dark:     #3561b8;
-  --color-surface:          #ebecee;
-  --color-surface-card:     #ffffff;
-  --color-surface-border:   #d8d9dc;
-  --color-text-primary:     #101620;
-  --color-text-secondary:   #5a6070;
-  --color-text-muted:       #8c939e;
-  --color-success:          #16a34a;
-  --color-warning:          #d97706;
-  --color-danger:           #dc2626;
+  --color-primary:        #4676cd;
+  --color-primary-light:  #5887d1;
+  --color-primary-dark:   #3561b8;
+  --color-surface:        #ebecee;
+  --color-surface-card:   #ffffff;
+  --color-surface-border: #d8d9dc;
+  --color-text-primary:   #101620;
+  --color-text-secondary: #5a6070;
+  --color-text-muted:     #8c939e;
+  --color-success:        #16a34a;
+  --color-warning:        #d97706;
+  --color-danger:         #dc2626;
   --font-sans: 'DM Sans', sans-serif;
   --font-mono: 'DM Mono', monospace;
 }
 
 /* ─── Reset ─────────────────────────────────────────────────── */
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { font-size: 16px; -webkit-font-smoothing: antialiased; }
-
 body {
   font-family: 'DM Sans', sans-serif;
   background-color: var(--bg);
@@ -77,7 +71,6 @@ body {
   line-height: 1.6;
   min-height: 100vh;
 }
-
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -85,40 +78,42 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
 }
 
-/* ─── Color utilities (para clases usadas en JSX) ───────────── */
-
-.text-text-primary   { color: var(--text-primary) !important; }
+/* ─── Utilidades de color (usadas en JSX con className) ──────── */
+.text-text-primary   { color: var(--text-primary)   !important; }
 .text-text-secondary { color: var(--text-secondary) !important; }
-.text-text-muted     { color: var(--text-muted) !important; }
-.text-primary        { color: var(--primary) !important; }
-.text-primary-dark   { color: var(--primary-dark) !important; }
-.text-success        { color: var(--success) !important; }
-.text-warning        { color: var(--warning) !important; }
-.text-danger         { color: var(--danger) !important; }
+.text-text-muted     { color: var(--text-muted)     !important; }
+.text-primary        { color: var(--primary)        !important; }
+.text-primary-dark   { color: var(--primary-dark)   !important; }
 
-.bg-surface          { background-color: var(--surface) !important; }
+.bg-surface          { background-color: var(--surface)      !important; }
 .bg-surface-card     { background-color: var(--surface-card) !important; }
-.bg-primary          { background-color: var(--primary) !important; }
-.bg-primary\/10      { background-color: rgba(70,118,205,0.1) !important; }
+.bg-primary          { background-color: var(--primary)      !important; }
+.bg-primary\/5       { background-color: rgba(70,118,205,0.05) !important; }
+.bg-primary\/10      { background-color: rgba(70,118,205,0.10) !important; }
 
-.border-surface-border { border-color: var(--surface-border) !important; }
-.border-primary      { border-color: var(--primary) !important; }
+.border-surface-border  { border-color: var(--surface-border)          !important; }
+.border-primary         { border-color: var(--primary)                 !important; }
+.border-primary\/40     { border-color: rgba(70,118,205,0.4)           !important; }
 
-.hover\:text-primary:hover      { color: var(--primary) !important; }
-.hover\:text-primary-dark:hover { color: var(--primary-dark) !important; }
-.hover\:bg-surface:hover        { background-color: var(--surface) !important; }
+.hover\:border-primary\/40:hover { border-color: rgba(70,118,205,0.4) !important; }
+.hover\:text-primary:hover       { color: var(--primary)              !important; }
+.hover\:text-primary-dark:hover  { color: var(--primary-dark)         !important; }
+.hover\:bg-surface:hover         { background-color: var(--surface)   !important; }
 
-/* ─── Card ──────────────────────────────────────────────────── */
+/* Spinner de carga */
+.border-primary.border-t-transparent {
+  border-color: var(--primary) !important;
+  border-top-color: transparent !important;
+}
 
+/* ─── Card ───────────────────────────────────────────────────── */
 .card {
   background: var(--surface-card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  padding: 1.25rem;
 }
 
-/* ─── Inputs ────────────────────────────────────────────────── */
-
+/* ─── Inputs ─────────────────────────────────────────────────── */
 .input {
   display: block;
   width: 100%;
@@ -135,10 +130,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .input::placeholder { color: var(--text-muted); }
 .input:hover        { border-color: #b8bcc4; }
-.input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(70,118,205,0.12);
-}
+.input:focus        { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(70,118,205,0.12); }
 select.input {
   cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238c939e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
@@ -148,8 +140,7 @@ select.input {
 }
 textarea.input { resize: vertical; min-height: 5rem; }
 
-/* ─── Label ─────────────────────────────────────────────────── */
-
+/* ─── Label ──────────────────────────────────────────────────── */
 .label {
   display: block;
   font-size: 0.8125rem;
@@ -158,8 +149,7 @@ textarea.input { resize: vertical; min-height: 5rem; }
   margin-bottom: 0.375rem;
 }
 
-/* ─── Buttons ───────────────────────────────────────────────── */
-
+/* ─── Buttons ────────────────────────────────────────────────── */
 .btn-primary, .btn-secondary, .btn-success,
 .btn-warning, .btn-danger, .btn-ghost {
   display: inline-flex;
@@ -176,37 +166,42 @@ textarea.input { resize: vertical; min-height: 5rem; }
   transition: background 0.15s, transform 0.1s, opacity 0.15s;
   white-space: nowrap;
   user-select: none;
-  text-decoration: none;
 }
-.btn-primary, .btn-secondary, .btn-success,
-.btn-warning, .btn-danger, .btn-ghost {
-  &:active:not(:disabled) { transform: scale(0.97); }
-  &:disabled { opacity: 0.55; cursor: not-allowed; }
-}
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.btn-success:active:not(:disabled),
+.btn-warning:active:not(:disabled),
+.btn-danger:active:not(:disabled),
+.btn-ghost:active:not(:disabled) { transform: scale(0.97); }
 
-.btn-primary   { background: var(--primary);   color: #fff; }
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-success:disabled,
+.btn-warning:disabled,
+.btn-danger:disabled   { opacity: 0.55; cursor: not-allowed; }
+
+.btn-primary   { background: var(--primary); color: #fff; }
 .btn-primary:hover:not(:disabled)   { background: var(--primary-dark); }
 
-.btn-secondary { background: var(--surface);   color: var(--text-secondary); border: 1.5px solid var(--surface-border); }
+.btn-secondary { background: var(--surface); color: var(--text-secondary); border: 1.5px solid var(--surface-border); }
 .btn-secondary:hover:not(:disabled) { background: #dde0e5; color: var(--text-primary); }
 
-.btn-success   { background: var(--success);   color: #fff; }
+.btn-success   { background: var(--success); color: #fff; }
 .btn-success:hover:not(:disabled)   { background: #15803d; }
 
-.btn-warning   { background: var(--warning);   color: #fff; }
+.btn-warning   { background: var(--warning); color: #fff; }
 .btn-warning:hover:not(:disabled)   { background: var(--warning-fg); }
 
-.btn-danger    { background: var(--danger);    color: #fff; }
+.btn-danger    { background: var(--danger);  color: #fff; }
 .btn-danger:hover:not(:disabled)    { background: var(--danger-fg); }
 
-.btn-ghost     { background: transparent;      color: var(--text-secondary); }
+.btn-ghost     { background: transparent; color: var(--text-secondary); }
 .btn-ghost:hover:not(:disabled)     { background: var(--surface); color: var(--text-primary); }
 
 .btn-lg { padding: 0.75rem 1.5rem !important; font-size: 1rem !important; }
 .btn-sm { padding: 0.35rem 0.75rem !important; font-size: 0.8125rem !important; }
 
-/* ─── Badge ─────────────────────────────────────────────────── */
-
+/* ─── Badge ──────────────────────────────────────────────────── */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -223,20 +218,7 @@ textarea.input { resize: vertical; min-height: 5rem; }
 .badge-blue  { background: #d9dfea;              color: var(--primary); }
 .badge-slate { background: #dfe0e2;              color: #868d99; }
 
-/* ─── Spinner utility ───────────────────────────────────────── */
-
-.spinner {
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ─── Section heading ───────────────────────────────────────── */
-
+/* ─── Section heading ────────────────────────────────────────── */
 .section-heading {
   font-size: 0.7rem;
   font-weight: 700;
@@ -244,18 +226,16 @@ textarea.input { resize: vertical; min-height: 5rem; }
   text-transform: uppercase;
   color: var(--text-muted);
   margin-bottom: 1rem;
+  display: block;
 }
 
-/* ─── Scrollbar ─────────────────────────────────────────────── */
-
+/* ─── Scrollbar ──────────────────────────────────────────────── */
 ::-webkit-scrollbar        { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: #c4c8d0; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-
-/* ─── Tailwind base override ────────────────────────────────── */
 
 @layer base {
   * { border-color: var(--surface-border); }
