@@ -1,4 +1,4 @@
-import api from './config'
+import api from './client'
 
 export const getLogs = (params) => {
   return api.get('/logs', { params })
