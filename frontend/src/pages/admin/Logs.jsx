@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { getLogs } from '../../api/logs'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Activity, Key, Clock, FileDown, Edit, Monitor, Play, Square, Search } from 'lucide-react'
+// Importamos los iconos uno a uno asegurándonos de que existen
+import { Activity, Key, Clock, FileDown, Edit, Monitor, Play, Square, Search, AlertCircle } from 'lucide-react'
 
-// Mapeo visual de acciones (Iconos, colores y textos amigables)
 const ACTION_STYLES = {
   'LOGIN_EMAIL': { label: 'Login (Email)', icon: Key, color: 'text-blue-600 bg-blue-50 border-blue-200' },
   'LOGIN_DNI': { label: 'Login (DNI)', icon: Key, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
@@ -22,35 +22,29 @@ export default function AdminLogs() {
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    // Por defecto pedimos los últimos 300 eventos
     getLogs({ limit: 300 })
-      .then((res) => setLogs(res.data))
-      .catch((err) => console.error(err))
+      .then((res) => setLogs(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => console.error("Error cargando logs:", err))
       .finally(() => setLoading(false))
   }, [])
 
-  // Filtro rápido de búsqueda en el frontend
   const filteredLogs = logs.filter(log => 
-    log.user?.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.user?.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.accion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (log.detalles && log.detalles.toLowerCase().includes(searchTerm.toLowerCase()))
+    (log.user?.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (log.user?.apellidos || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (log.accion || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (log.detalles || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Cabecera */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary flex items-center gap-2">
+        <h1 className="text-2xl font-bold tracking-tight text-black flex items-center gap-2">
           <Activity className="w-6 h-6 text-primary" />
-          Registro de Auditoría (Logs)
+          Registro de Auditoría
         </h1>
-        <p className="text-sm mt-1 text-text-muted">
-          Historial inmutable de todas las acciones, accesos y modificaciones en el sistema.
-        </p>
+        <p className="text-sm mt-1 text-body">Historial de acciones del sistema.</p>
       </div>
 
-      {/* Buscador */}
       <div className="rounded-sm border border-stroke bg-white shadow-default p-4">
         <div className="relative">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-body">
@@ -58,91 +52,52 @@ export default function AdminLogs() {
           </span>
           <input
             type="text"
-            placeholder="Buscar por empleado, acción o detalle..."
-            className="w-full bg-gray-50 border border-stroke rounded-md py-3 pl-12 pr-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+            placeholder="Buscar..."
+            className="w-full bg-gray-50 border border-stroke rounded-md py-3 pl-12 pr-4 text-sm focus:border-primary outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Tabla de Logs */}
       <div className="rounded-sm border border-stroke bg-white shadow-default overflow-hidden">
         <div className="max-w-full overflow-x-auto">
           {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : filteredLogs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-body text-sm">
-              No hay registros de actividad que coincidan con la búsqueda.
-            </div>
+            <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
           ) : (
-            <table className="w-full table-auto">
+            <table className="w-full table-auto text-left">
               <thead>
-                <tr className="bg-whiten text-left">
-                  <th className="py-4 px-6 font-medium text-black text-xs uppercase tracking-wider min-w-[180px]">Fecha y Hora</th>
-                  <th className="py-4 px-6 font-medium text-black text-xs uppercase tracking-wider min-w-[180px]">Usuario</th>
-                  <th className="py-4 px-6 font-medium text-black text-xs uppercase tracking-wider min-w-[180px]">Acción</th>
-                  <th className="py-4 px-6 font-medium text-black text-xs uppercase tracking-wider min-w-[250px]">Detalles</th>
-                  <th className="py-4 px-6 font-medium text-black text-xs uppercase tracking-wider min-w-[120px]">IP Origen</th>
+                <tr className="bg-gray-50 border-b border-stroke text-xs uppercase text-black font-bold">
+                  <th className="py-4 px-6">Fecha</th>
+                  <th className="py-4 px-6">Usuario</th>
+                  <th className="py-4 px-6">Acción</th>
+                  <th className="py-4 px-6">Detalles</th>
+                  <th className="py-4 px-6">IP</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredLogs.map((log, index) => {
-                  const style = ACTION_STYLES[log.accion] || { label: log.accion, icon: Activity, color: 'text-gray-600 bg-gray-50 border-gray-200' }
-                  const Icon = style.icon
+                {filteredLogs.map((log) => {
+                  const config = ACTION_STYLES[log.accion] || { label: log.accion, icon: AlertCircle, color: 'text-gray-500 bg-gray-100' };
+                  const LogIcon = config.icon;
 
                   return (
-                    <tr key={log.id} className={`${index !== filteredLogs.length - 1 ? 'border-b border-stroke' : ''} hover:bg-gray-50`}>
-                      
-                      {/* Fecha */}
+                    <tr key={log.id} className="border-b border-stroke hover:bg-gray-50 text-sm">
                       <td className="py-3 px-6">
-                        <p className="font-semibold text-black text-sm">
-                          {format(new Date(log.created_at), "dd MMM yyyy", { locale: es })}
-                        </p>
-                        <p className="text-xs text-body">
-                          {format(new Date(log.created_at), "HH:mm:ss")}
-                        </p>
+                        <div className="text-black font-medium">{format(new Date(log.created_at), "dd/MM/yyyy")}</div>
+                        <div className="text-xs text-body">{format(new Date(log.created_at), "HH:mm:ss")}</div>
                       </td>
-
-                      {/* Usuario */}
                       <td className="py-3 px-6">
-                        {log.user ? (
-                          <>
-                            <p className="font-bold text-black text-sm">{log.user.nombre} {log.user.apellidos}</p>
-                            <p className="text-[10px] text-body uppercase tracking-wider">{log.user.rol}</p>
-                          </>
-                        ) : (
-                          <span className="text-sm italic text-gray-400">Sistema / Desconocido</span>
-                        )}
+                        <div className="font-bold text-black">{log.user?.nombre} {log.user?.apellidos}</div>
+                        <div className="text-[10px] uppercase text-body">{log.user?.rol}</div>
                       </td>
-
-                      {/* Acción (Badge) */}
                       <td className="py-3 px-6">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border ${style.color}`}>
-                          <Icon className="w-3.5 h-3.5" />
-                          {style.label}
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${config.color}`}>
+                          <LogIcon className="w-3.5 h-3.5" />
+                          {config.label}
                         </span>
                       </td>
-
-                      {/* Detalles */}
-                      <td className="py-3 px-6 text-sm text-black">
-                        {log.detalles || '—'}
-                      </td>
-
-                      {/* IP Address */}
-                      <td className="py-3 px-6">
-                        {log.ip_address ? (
-                          <div className="flex items-center gap-1 text-xs text-body font-mono bg-gray-100 px-2 py-1 rounded w-fit">
-                            <Monitor className="w-3 h-3 text-gray-400" />
-                            {log.ip_address}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-400 italic">No registrada</span>
-                        )}
-                      </td>
-
+                      <td className="py-3 px-6 text-black">{log.detalles}</td>
+                      <td className="py-3 px-6 font-mono text-xs">{log.ip_address || '—'}</td>
                     </tr>
                   )
                 })}
