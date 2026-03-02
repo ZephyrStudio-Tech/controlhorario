@@ -10,8 +10,10 @@ def log_activity(
     ip_address: str = None
 ):
     """
-    Guarda un registro de auditoría en la base de datos.
+    Guarda un registro de auditoría en la base de datos con trazas de depuración.
     """
+    print(f"DEBUG: Intentando registrar acción: {accion} para el usuario: {user_id}")
+    
     try:
         nuevo_log = ActivityLog(
             user_id=user_id,
@@ -21,7 +23,11 @@ def log_activity(
         )
         db.add(nuevo_log)
         db.commit()
+        db.refresh(nuevo_log) # Sincroniza el objeto con la DB
+        
+        print(f"DEBUG: ¡Acción '{accion}' guardada con éxito en activity_logs!")
+        
     except Exception as e:
-        # Si el log falla, hacemos rollback para no romper la app principal
+        # Si el log falla, hacemos rollback para no bloquear la base de datos
         db.rollback()
-        print(f"Error al guardar log de actividad: {e}")
+        print(f"DEBUG ERROR: Fallo crítico al guardar log de actividad: {str(e)}")
