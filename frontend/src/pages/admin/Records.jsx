@@ -7,7 +7,6 @@ import Badge from '../../components/UI/Badge'
 import Modal from '../../components/UI/Modal'
 import { Monitor, MapPin, Edit2, AlertCircle, Search, ChevronDown, ChevronUp } from 'lucide-react'
 
-// Componente para cada Fila de la tabla (Permite el desplegable de Línea de Tiempo)
 function SessionRow({ s, openEdit }) {
   const [expanded, setExpanded] = useState(false)
 
@@ -19,10 +18,10 @@ function SessionRow({ s, openEdit }) {
         <td className="py-4 px-6">
           <div className="flex flex-col">
             <p className="font-bold text-black text-sm">
-              {s.user ? `${s.user.nombre} ${s.user.apellidos}` : 'Usuario Desconocido'}
+              {s.user?.nombre} {s.user?.apellidos}
             </p>
             <p className="text-xs text-body mt-0.5 capitalize">
-              {s.user?.rol === 'rrhh' ? 'RRHH' : (s.user?.rol || '—')}
+              {s.user?.rol === 'rrhh' ? 'RRHH' : s.user?.rol}
             </p>
           </div>
         </td>
@@ -127,7 +126,7 @@ function SessionRow({ s, openEdit }) {
                     <p className="text-sm font-bold text-black flex items-center gap-2 capitalize">
                       Pausa: {p.tipo.replace(/_/g, ' ')}
                       <span className="text-xs font-medium text-body bg-white border border-stroke px-2 py-0.5 rounded">
-                        {format(new Date(p.inicio_pausa), 'HH:mm:ss')} &rarr; {p.fin_pausa ? format(new Date(p.fin_pausa), 'HH:mm:ss') : 'En curso'}
+                        {format(new Date(p.inicio_pausa), 'HH:mm:ss')} → {p.fin_pausa ? format(new Date(p.fin_pausa), 'HH:mm:ss') : 'En curso'}
                       </span>
                     </p>
                   </div>
@@ -161,7 +160,6 @@ function SessionRow({ s, openEdit }) {
     </Fragment>
   )
 }
-
 
 export default function AdminRecords() {
   const [sessions, setSessions] = useState([])
