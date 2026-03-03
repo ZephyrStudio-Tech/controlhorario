@@ -1,10 +1,11 @@
 import uuid
 import os
 from datetime import datetime, timezone
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Request
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Request, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.models.user import User, RolEnum
 from app.models.document import Document
@@ -12,12 +13,11 @@ from app.schemas.document import DocumentOut
 from app.services.auth_service import get_current_user, require_admin_or_rrhh
 from app.config import get_settings
 from app.utils.file_utils import ensure_storage_dir, is_allowed_mime, sanitize_filename, MAX_SIZE_BYTES
-from app.services.log_service import log_activity # <-- EL ESPÍA
+from app.services.log_service import log_activity
 from app.services.session_service import get_client_ip
 
 settings = get_settings()
 router = APIRouter(prefix="/documents", tags=["documents"])
-
 
 @router.post("/upload", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
 async def upload_document(
@@ -69,6 +69,29 @@ async def upload_document(
 
     return doc
 
+# --- NUEVO ENDPOINT GLOBAL PARA ADMIN/RRHH ---
+@router.get("/", response_model=List[DocumentOut])
+def get_all_documents(
+    request: Request,
+    user_id: Optional[uuid.UUID] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_or_rrhh),
+):
+    # Registro de auditoría
+    log_activity(
+        db, 
+        "DOCUMENT_LIST_ALL_VIEW", 
+        "Consultó el listado global de documentos", 
+        current_user.id, 
+        get_client_ip(request)
+    )
+    
+    q = db.query(Document).filter(Document.activo == True)
+    if user_id:
+        q = q.filter(Document.user_id == user_id)
+        
+    return q.order_by(Document.subido_en.desc()).all()
+
 
 @router.get("/my", response_model=List[DocumentOut])
 def get_my_documents(
@@ -93,7 +116,13 @@ def get_user_documents(
     # --- REGISTRO DE AUDITORÍA ---
     target_user = db.query(User).filter(User.id == user_id).first()
     t_name = f"{target_user.nombre} {target_user.apellidos}" if target_user else str(user_id)
-    log_activity(db, "DOCUMENT_LIST_VIEW", f"Consultó la lista de documentos de {t_name}", current_user.id, get_client_ip(request))
+    log_activity(
+        db, 
+        "DOCUMENT_LIST_VIEW", 
+        f"Consultó la lista de documentos de {t_name}", 
+        current_user.id, 
+        get_client_ip(request)
+    )
 
     return (
         db.query(Document)
@@ -168,4 +197,10 @@ def deactivate_document(
     db.commit()
 
     # --- REGISTRO DE AUDITORÍA ---
-    log_activity(db, "DOCUMENT_DELETE", f"Desactivó el documento: {doc.nombre_original}", current_user.id, get_client_ip(request))
+    log_activity(
+        db, 
+        "DOCUMENT_DELETE", 
+        f"Desactivó el documento: {doc.nombre_original}", 
+        current_user.id, 
+        get_client_ip(request)
+    )
