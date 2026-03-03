@@ -6,6 +6,16 @@ from app.models.work_session import SessionEstadoEnum
 from app.schemas.session_pause import SessionPauseOut
 
 
+# --- NUEVO: Sub-esquema para enviar la info del trabajador junto a la sesión ---
+class SessionUserOut(BaseModel):
+    id: uuid.UUID
+    nombre: str
+    apellidos: str
+    rol: str
+
+    model_config = {"from_attributes": True}
+
+
 class WorkSessionCreate(BaseModel):
     lat: Optional[float] = None
     lon: Optional[float] = None
@@ -27,6 +37,10 @@ class WorkSessionAdminUpdate(BaseModel):
 class WorkSessionOut(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
+    
+    # --- AÑADIMOS EL USUARIO AQUÍ PARA QUE LLEGUE AL FRONTEND ---
+    user: Optional[SessionUserOut] = None 
+    
     fecha_entrada: datetime
     fecha_salida: Optional[datetime]
     estado: SessionEstadoEnum

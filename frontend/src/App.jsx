@@ -23,6 +23,7 @@ import AdminRecords from './pages/admin/Records'
 import AdminAbsences from './pages/admin/Absences'
 import AdminDocuments from './pages/admin/Documents'
 import AdminReports from './pages/admin/Reports'
+import AdminLogs from './pages/admin/Logs'
 
 function RootRedirect() {
   const { user } = useAuth()
@@ -156,6 +157,16 @@ function App() {
                 <AppLayout><AdminReports /></AppLayout>
               </ProtectedRoute>
             }
+          />
+          
+          {/* RUTA CORREGIDA */}
+          <Route 
+            path="/admin/logs" 
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <AppLayout><AdminLogs /></AppLayout>
+              </ProtectedRoute>
+            } 
           />
 
           <Route path="*" element={<Navigate to="/" replace />} />

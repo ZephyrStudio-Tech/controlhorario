@@ -1,8 +1,18 @@
 import uuid
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Optional
 from pydantic import BaseModel
-from app.models.absence import AusenciaTipoEnum, AusenciaEstadoEnum
+# IMPORTACIÓN CORREGIDA: Usando los nombres en español que tienes en tu modelo
+from app.models.absence import AusenciaEstadoEnum, AusenciaTipoEnum
+
+
+class AbsenceUserOut(BaseModel):
+    id: uuid.UUID
+    nombre: str
+    apellidos: str
+    rol: str
+
+    model_config = {"from_attributes": True}
 
 
 class AbsenceCreate(BaseModel):
@@ -20,6 +30,7 @@ class AbsenceReview(BaseModel):
 class AbsenceOut(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
+    user: Optional[AbsenceUserOut] = None 
     tipo: AusenciaTipoEnum
     fecha_inicio: date
     fecha_fin: date
@@ -27,7 +38,6 @@ class AbsenceOut(BaseModel):
     comentario_trabajador: Optional[str]
     comentario_rrhh: Optional[str]
     revisado_por: Optional[uuid.UUID]
-    fecha_revision: Optional[datetime]
     created_at: datetime
 
     model_config = {"from_attributes": True}

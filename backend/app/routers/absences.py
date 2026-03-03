@@ -1,13 +1,15 @@
 import uuid
 from datetime import datetime, timezone, date
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.models.absence import Absence, AusenciaEstadoEnum
 from app.schemas.absence import AbsenceCreate, AbsenceReview, AbsenceOut
 from app.services.auth_service import get_current_user, require_admin_or_rrhh
+from app.services.log_service import log_activity # <-- IMPORTAMOS EL ESPÍA
+from app.services.session_service import get_client_ip # Para capturar la IP
 
 router = APIRouter(prefix="/absences", tags=["absences"])
 
@@ -33,6 +35,7 @@ def _check_overlap(
 @router.post("/", response_model=AbsenceOut, status_code=status.HTTP_201_CREATED)
 def create_absence(
     payload: AbsenceCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -57,6 +60,16 @@ def create_absence(
     db.add(absence)
     db.commit()
     db.refresh(absence)
+
+    # --- REGISTRO DE AUDITORÍA ---
+    log_activity(
+        db, 
+        "ABSENCE_REQUEST", 
+        f"Solicitó {payload.tipo.value} del {payload.fecha_inicio} al {payload.fecha_fin}", 
+        current_user.id, 
+        get_client_ip(request)
+    )
+
     return absence
 
 
@@ -77,6 +90,7 @@ def get_my_absences(
 
 @router.get("/all", response_model=List[AbsenceOut])
 def get_all_absences(
+    request: Request,
     user_id: Optional[uuid.UUID] = Query(None),
     estado: Optional[AusenciaEstadoEnum] = Query(None),
     start_date: Optional[date] = Query(None),
@@ -84,6 +98,10 @@ def get_all_absences(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_or_rrhh),
 ):
+    # --- REGISTRO DE AUDITORÍA ---
+    # Registramos que RRHH/Admin está consultando todas las ausencias
+    log_activity(db, "ABSENCE_VIEW_ALL", "Consultó el listado global de ausencias", current_user.id, get_client_ip(request))
+
     q = db.query(Absence)
     if user_id:
         q = q.filter(Absence.user_id == user_id)
@@ -100,6 +118,7 @@ def get_all_absences(
 def review_absence(
     absence_id: uuid.UUID,
     payload: AbsenceReview,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_or_rrhh),
 ):
@@ -119,12 +138,26 @@ def review_absence(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": True, "code": "COMMENT_REQUIRED", "message": "Se requiere un comentario para denegar una solicitud"},
         )
+    
     absence.estado = payload.estado
     absence.comentario_rrhh = payload.comentario_rrhh
     absence.revisado_por = current_user.id
     absence.fecha_revision = datetime.now(timezone.utc)
     db.commit()
     db.refresh(absence)
+
+    # --- REGISTRO DE AUDITORÍA ---
+    trabajador = db.query(User).filter(User.id == absence.user_id).first()
+    nombre_t = f"{trabajador.nombre} {trabajador.apellidos}" if trabajador else "Usuario"
+    
+    log_activity(
+        db, 
+        f"ABSENCE_{payload.estado.value.upper()}", 
+        f"{payload.estado.value.capitalize()} ausencia de {nombre_t} ({absence.tipo.value})", 
+        current_user.id, 
+        get_client_ip(request)
+    )
+
     return absence
 
 
