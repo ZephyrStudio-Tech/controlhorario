@@ -13,7 +13,8 @@ from app.services.session_service import get_client_ip
 
 router = APIRouter(prefix="/logs", tags=["logs"])
 
-@router.get("/", response_model=List[ActivityLogOut])
+# Fíjate que ahora es get("") y no get("/")
+@router.get("", response_model=List[ActivityLogOut])
 def get_activity_logs(
     request: Request,
     limit: int = Query(300),
