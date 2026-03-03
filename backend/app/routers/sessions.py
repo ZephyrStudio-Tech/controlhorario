@@ -4,6 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.models.user import User, RolEnum
 from app.models.work_session import WorkSession, SessionEstadoEnum
@@ -11,10 +12,7 @@ from app.models.session_pause import SessionPause
 from app.schemas.work_session import WorkSessionCreate, WorkSessionClose, WorkSessionOut, WorkSessionAdminUpdate
 from app.schemas.session_pause import SessionPauseCreate, SessionPauseEnd, SessionPauseOut
 from app.services.auth_service import get_current_user, require_admin, require_admin_or_rrhh
-from app.services.session_service import (
-    get_client_ip,
-    compute_session_hours,
-)
+from app.services.session_service import get_client_ip, compute_session_hours
 from app.services.log_service import log_activity 
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -75,7 +73,6 @@ def clock_out(
         
     ip = get_client_ip(request)
     
-    # Cerrar pausas si las hubiera
     open_pause = db.query(SessionPause).filter(
         SessionPause.session_id == session.id,
         SessionPause.fin_pausa == None,
@@ -190,16 +187,31 @@ def get_current_session(
     ).first()
 
 
+# --- RUTA RESTAURADA PARA QUE LOS EMPLEADOS PUEDAN VER SUS SESIONES ---
+@router.get("/my", response_model=List[WorkSessionOut])
+def get_my_sessions(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    q = db.query(WorkSession).filter(WorkSession.user_id == current_user.id)
+    if start_date:
+        q = q.filter(WorkSession.fecha_entrada >= datetime.combine(start_date, datetime.min.time()).replace(tzinfo=timezone.utc))
+    if end_date:
+        q = q.filter(WorkSession.fecha_entrada <= datetime.combine(end_date, datetime.max.time()).replace(tzinfo=timezone.utc))
+    return q.order_by(WorkSession.fecha_entrada.desc()).all()
+
+
 @router.get("/all", response_model=List[WorkSessionOut])
 def get_all_sessions(
-    request: Request, # Añadido para auditoría
+    request: Request,
     user_id: Optional[uuid.UUID] = Query(None),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_or_rrhh),
 ):
-    # --- REGISTRO DE AUDITORÍA ---
     log_activity(db, "SESSION_VIEW_ALL", "Consultó el listado histórico de jornadas", current_user.id, get_client_ip(request))
 
     q = db.query(WorkSession)
@@ -212,52 +224,9 @@ def get_all_sessions(
     return q.order_by(WorkSession.fecha_entrada.desc()).all()
 
 
-@router.patch("/{session_id}", response_model=WorkSessionOut)
-def admin_update_session(
-    session_id: uuid.UUID,
-    payload: WorkSessionAdminUpdate,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
-):
-    session = db.query(WorkSession).filter(WorkSession.id == session_id).first()
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": True, "code": "SESSION_NOT_FOUND", "message": "Sesión no encontrada"},
-        )
-    
-    ip = get_client_ip(request)
-    update_data = payload.model_dump(exclude_unset=True)
-    recalculate = "fecha_entrada" in update_data or "fecha_salida" in update_data
-
-    for key, value in update_data.items():
-        setattr(session, key, value)
-    
-    session.modificado_por = current_user.id
-    session.fecha_modificacion = datetime.now(timezone.utc)
-
-    if recalculate and session.fecha_salida and session.fecha_entrada:
-        worker = db.query(User).filter(User.id == session.user_id).first()
-        jornada = float(worker.jornada_horas_diarias) if worker else 8.0
-        horas_netas, horas_extra = compute_session_hours(session, db, jornada)
-        session.horas_netas = horas_netas
-        session.horas_extra = horas_extra
-
-    db.commit()
-    db.refresh(session)
-    
-    worker_afectado = db.query(User).filter(User.id == session.user_id).first()
-    afectado_name = f"{worker_afectado.nombre} {worker_afectado.apellidos}" if worker_afectado else "Usuario"
-    
-    log_activity(db, "ADMIN_EDIT_SESSION", f"Modificó manualmente la jornada de {afectado_name}", current_user.id, ip)
-    
-    return session
-
-
 @router.get("/today/summary")
 def today_summary(
-    request: Request, # Añadido para auditoría
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_or_rrhh),
 ):
@@ -267,7 +236,6 @@ def today_summary(
     today_start = now_madrid.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
     today_end = now_madrid.replace(hour=23, minute=59, second=59, microsecond=999999).astimezone(timezone.utc)
 
-    # Registro de auditoría
     log_activity(db, "DASHBOARD_VIEW", "Consultó el resumen de actividad en tiempo real", current_user.id, get_client_ip(request))
 
     workers = db.query(User).filter(User.rol == RolEnum.worker, User.activo == True).all()
@@ -353,3 +321,47 @@ def export_report(
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename=informe_{start_date}_{end_date}.csv"},
     )
+
+
+# --- RUTA MOVIDA AL FINAL PARA NO CHOCAR CON LOS GETS ---
+@router.patch("/{session_id}", response_model=WorkSessionOut)
+def admin_update_session(
+    session_id: uuid.UUID,
+    payload: WorkSessionAdminUpdate,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    session = db.query(WorkSession).filter(WorkSession.id == session_id).first()
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": True, "code": "SESSION_NOT_FOUND", "message": "Sesión no encontrada"},
+        )
+    
+    ip = get_client_ip(request)
+    update_data = payload.model_dump(exclude_unset=True)
+    recalculate = "fecha_entrada" in update_data or "fecha_salida" in update_data
+
+    for key, value in update_data.items():
+        setattr(session, key, value)
+    
+    session.modificado_por = current_user.id
+    session.fecha_modificacion = datetime.now(timezone.utc)
+
+    if recalculate and session.fecha_salida and session.fecha_entrada:
+        worker = db.query(User).filter(User.id == session.user_id).first()
+        jornada = float(worker.jornada_horas_diarias) if worker else 8.0
+        horas_netas, horas_extra = compute_session_hours(session, db, jornada)
+        session.horas_netas = horas_netas
+        session.horas_extra = horas_extra
+
+    db.commit()
+    db.refresh(session)
+    
+    worker_afectado = db.query(User).filter(User.id == session.user_id).first()
+    afectado_name = f"{worker_afectado.nombre} {worker_afectado.apellidos}" if worker_afectado else "Usuario"
+    
+    log_activity(db, "ADMIN_EDIT_SESSION", f"Modificó manualmente la jornada de {afectado_name}", current_user.id, ip)
+    
+    return session
