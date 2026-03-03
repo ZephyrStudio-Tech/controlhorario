@@ -90,29 +90,41 @@ function SessionRow({ s, openEdit }) {
               {/* Evento 1: Entrada */}
               <div className="relative">
                 <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-success ring-4 ring-success-light"></div>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   <p className="text-sm font-bold text-black flex items-center gap-2">
                     Fichaje de Entrada
                     <span className="text-xs font-medium text-body bg-white border border-stroke px-2 py-0.5 rounded">
                       {format(new Date(s.fecha_entrada), 'HH:mm:ss')}
                     </span>
                   </p>
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-body">
+                  {/* Cajas de Información (IP y Geo) */}
+                  <div className="flex flex-wrap items-center gap-3 text-xs">
                     {s.ip_entrada ? (
-                      <span className="flex items-center gap-1"><Monitor className="w-3.5 h-3.5" /> IP: {s.ip_entrada}</span>
+                      <span className="flex items-center gap-1.5 bg-white border border-stroke text-body px-2.5 py-1 rounded-md shadow-sm">
+                        <Monitor className="w-3.5 h-3.5 text-primary" /> {s.ip_entrada}
+                      </span>
                     ) : (
                       <span className="text-gray-400 italic">IP no registrada</span>
                     )}
-                    
-                    {s.lat_entrada && s.lon_entrada && (
+
+                    {s.lat_entrada && s.lon_entrada ? (
                       <a 
-                        href={`https://www.google.com/maps?q=${s.lat_entrada},${s.lon_entrada}`} 
+                        href={`https://www.google.com/maps/search/?api=1&query=${s.lat_entrada},${s.lon_entrada}`} 
                         target="_blank" 
                         rel="noreferrer" 
-                        className="flex items-center gap-1 text-primary hover:underline font-medium"
+                        className="flex items-center gap-1.5 bg-white border border-stroke text-body hover:text-primary hover:border-primary/50 px-2.5 py-1 rounded-md shadow-sm transition-colors"
                       >
-                        <MapPin className="w-3.5 h-3.5" /> Ver en mapa ({Number(s.lat_entrada).toFixed(4)}, {Number(s.lon_entrada).toFixed(4)})
+                        <MapPin className="w-3.5 h-3.5 text-primary" /> 
+                        Lat: {Number(s.lat_entrada).toFixed(5)}, Lon: {Number(s.lon_entrada).toFixed(5)}
                       </a>
+                    ) : s.geolocalizacion_denegada_entrada ? (
+                      <span className="flex items-center gap-1.5 bg-danger/10 border border-danger/20 text-danger px-2.5 py-1 rounded-md shadow-sm">
+                        <MapPin className="w-3.5 h-3.5" /> Geolocalización denegada por el usuario
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 bg-gray-100 border border-stroke text-gray-500 px-2.5 py-1 rounded-md shadow-sm">
+                        <MapPin className="w-3.5 h-3.5" /> Sin ubicación
+                      </span>
                     )}
                   </div>
                 </div>
@@ -137,13 +149,35 @@ function SessionRow({ s, openEdit }) {
               {s.fecha_salida ? (
                 <div className="relative">
                   <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-danger ring-4 ring-danger-light"></div>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-2">
                     <p className="text-sm font-bold text-black flex items-center gap-2">
                       Fichaje de Salida
                       <span className="text-xs font-medium text-body bg-white border border-stroke px-2 py-0.5 rounded">
                         {format(new Date(s.fecha_salida), 'HH:mm:ss')}
                       </span>
                     </p>
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      {s.ip_salida && (
+                        <span className="flex items-center gap-1.5 bg-white border border-stroke text-body px-2.5 py-1 rounded-md shadow-sm">
+                          <Monitor className="w-3.5 h-3.5 text-primary" /> {s.ip_salida}
+                        </span>
+                      )}
+                      {s.lat_salida && s.lon_salida ? (
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${s.lat_salida},${s.lon_salida}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="flex items-center gap-1.5 bg-white border border-stroke text-body hover:text-primary hover:border-primary/50 px-2.5 py-1 rounded-md shadow-sm transition-colors"
+                        >
+                          <MapPin className="w-3.5 h-3.5 text-primary" /> 
+                          Lat: {Number(s.lat_salida).toFixed(5)}, Lon: {Number(s.lon_salida).toFixed(5)}
+                        </a>
+                      ) : s.geolocalizacion_denegada_salida ? (
+                        <span className="flex items-center gap-1.5 bg-danger/10 border border-danger/20 text-danger px-2.5 py-1 rounded-md shadow-sm">
+                          <MapPin className="w-3.5 h-3.5" /> Geolocalización denegada
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               ) : (
