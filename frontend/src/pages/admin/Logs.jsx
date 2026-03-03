@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { getLogs } from '../../api/logs'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-// Importamos los iconos uno a uno asegurándonos de que existen
-import { Activity, Key, Clock, FileDown, Edit, Monitor, Play, Square, Search, AlertCircle } from 'lucide-react'
+import { Activity, Key, Clock, FileDown, Edit, Monitor, Play, Square, Search, AlertCircle, EyeOff, Eye } from 'lucide-react'
 
 const ACTION_STYLES = {
   'LOGIN_EMAIL': { label: 'Login (Email)', icon: Key, color: 'text-blue-600 bg-blue-50 border-blue-200' },
@@ -20,6 +19,7 @@ export default function AdminLogs() {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [hideAdmin, setHideAdmin] = useState(false) // Nuevo estado para el filtro
 
   useEffect(() => {
     getLogs({ limit: 300 })
@@ -28,12 +28,22 @@ export default function AdminLogs() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filteredLogs = logs.filter(log => 
-    (log.user?.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (log.user?.apellidos || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (log.accion || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (log.detalles || '').toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Lógica combinada de filtrado (Búsqueda + Ocultar Admin)
+  const filteredLogs = logs.filter(log => {
+    // 1. Filtrar los del admin si el botón está activado
+    if (hideAdmin && log.user?.rol === 'admin') {
+      return false;
+    }
+
+    // 2. Filtrar por término de búsqueda
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (log.user?.nombre || '').toLowerCase().includes(searchLower) ||
+      (log.user?.apellidos || '').toLowerCase().includes(searchLower) ||
+      (log.accion || '').toLowerCase().includes(searchLower) ||
+      (log.detalles || '').toLowerCase().includes(searchLower)
+    )
+  })
 
   return (
     <div className="flex flex-col gap-8">
@@ -46,17 +56,35 @@ export default function AdminLogs() {
       </div>
 
       <div className="rounded-sm border border-stroke bg-white shadow-default p-4">
-        <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-body">
-            <Search className="w-5 h-5" />
-          </span>
-          <input
-            type="text"
-            placeholder="Buscar..."
-            className="w-full bg-gray-50 border border-stroke rounded-md py-3 pl-12 pr-4 text-sm focus:border-primary outline-none"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          
+          {/* Barra de Búsqueda */}
+          <div className="relative w-full sm:max-w-md">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-body">
+              <Search className="w-5 h-5" />
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar..."
+              className="w-full bg-gray-50 border border-stroke rounded-md py-3 pl-12 pr-4 text-sm focus:border-primary outline-none"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Botón Ocultar Admin */}
+          <button
+            onClick={() => setHideAdmin(!hideAdmin)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-semibold transition-colors border ${
+              hideAdmin 
+                ? 'bg-primary/10 border-primary/20 text-primary' 
+                : 'bg-white border-stroke text-body hover:bg-gray-50'
+            }`}
+          >
+            {hideAdmin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {hideAdmin ? 'Mostrar registros de Admin' : 'Ocultar registros de Admin'}
+          </button>
+          
         </div>
       </div>
 
@@ -64,6 +92,10 @@ export default function AdminLogs() {
         <div className="max-w-full overflow-x-auto">
           {loading ? (
             <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
+          ) : filteredLogs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-body">
+              <p>No se encontraron registros con estos filtros.</p>
+            </div>
           ) : (
             <table className="w-full table-auto text-left">
               <thead>
